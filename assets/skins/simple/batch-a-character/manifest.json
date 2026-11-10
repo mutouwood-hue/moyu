@@ -1,0 +1,134 @@
+{
+  "batch": "A-character",
+  "palette": {
+    "navy": "#0B1736",
+    "mint": "#49E6C2",
+    "coral": "#FF6B6B"
+  },
+  "assets": {
+    "capybara_master.png": {
+      "size": [
+        2048,
+        2048
+      ],
+      "alpha": true,
+      "anchor": [
+        1024,
+        1888
+      ],
+      "use": "统一角色母版/缩略图与后续动作参考",
+      "electron": true
+    },
+    "capybara_work.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "工作模式角色静态主帧",
+      "electron": true
+    },
+    "capybara_work_reduced_motion.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "工作模式角色静态主帧（减少动态效果）",
+      "electron": true
+    },
+    "capybara_slack.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "摸鱼模式角色静态主帧",
+      "electron": true
+    },
+    "capybara_slack_reduced_motion.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "摸鱼模式角色静态主帧（减少动态效果）",
+      "electron": true
+    },
+    "capybara_offwork.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "下班状态角色静态主帧",
+      "electron": true
+    },
+    "capybara_offwork_reduced_motion.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "下班状态角色静态主帧（减少动态效果）",
+      "electron": true
+    },
+    "pajamas_overlay_master.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "睡衣商品 overlay；与标准角色母版同画布",
+      "electron": true
+    },
+    "capybara_pajamas_preview.png": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alpha": true,
+      "anchor": [
+        512,
+        944
+      ],
+      "use": "睡衣商品预览/商店缩略图源图",
+      "electron": true
+    },
+    "capybara_anchors.json": {
+      "size": null,
+      "alpha": null,
+      "anchor": null,
+      "use": "角色/配件锚点数据",
+      "electron": true
+    }
+  }
+}

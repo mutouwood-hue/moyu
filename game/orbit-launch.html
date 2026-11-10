@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#07131f">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<meta name="description" content="星轨弹射是一款浏览器物理模拟小游戏，在引力轨道中调整方向与力度，挑战发射任务。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="星轨随想录">
+<meta property="og:title" content="星轨弹射｜浏览器物理模拟小游戏">
+<meta property="og:description" content="在引力轨道中调整方向与力度，挑战星际发射任务。">
+<meta property="og:url" content="https://zxde.top/orbit-launch.html">
+<meta name="twitter:card" content="summary">
+<title>星轨弹射｜浏览器物理模拟小游戏</title>
+<style>
+  :root {
+    --pitch: #07131f;
+    --pitch-2: rgba(9, 28, 45, .94);
+    --space: #040c15;
+    --chalk: #f2efe7;
+    --chalk-dim: rgba(220, 229, 236, .62);
+    --line: rgba(157, 188, 214, .2);
+    --gold: #e0b458;
+    --gold-deep: #b9893a;
+    --cyan: #38bdf8;
+    --coral: #e8603f;
+    --ok: #10b981;
+    --radius: 8px;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html { color-scheme: dark; }
+
+  body {
+    min-height: 100vh;
+    background: var(--pitch);
+    color: var(--chalk);
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    line-height: 1.5;
+  }
+
+  button,
+  a { font: inherit; }
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+  }
+
+  [hidden] { display: none !important; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .g-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 56px;
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(6, 17, 29, .88);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 900;
+    text-decoration: none;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-links a {
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--chalk-dim);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color .2s ease, background .2s ease;
+  }
+
+  .nav-links a:hover {
+    color: var(--chalk);
+    background: rgba(243, 239, 228, .08);
+  }
+
+  .nav-links a.active {
+    color: var(--pitch);
+    background: var(--gold);
+    font-weight: 700;
+  }
+
+  .mobile-nav-button {
+    display: none;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(224, 180, 88, .28);
+    border-radius: 8px;
+    background: rgba(0, 0, 0, .14);
+    color: var(--gold);
+    cursor: pointer;
+  }
+
+  .mobile-nav-button svg,
+  .mobile-nav-button i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mobile-menu-icon {
+    position: relative;
+    display: inline-block;
+    width: 18px;
+    height: 14px;
+  }
+
+  .mobile-menu-icon span {
+    position: absolute;
+    left: 0;
+    width: 18px;
+    height: 2px;
+    border-radius: 999px;
+    background: currentColor;
+    transition: transform .22s ease-out, opacity .18s ease-out, top .22s ease-out;
+  }
+
+  .mobile-menu-icon span:nth-child(1) { top: 0; }
+  .mobile-menu-icon span:nth-child(2) { top: 6px; }
+  .mobile-menu-icon span:nth-child(3) { top: 12px; }
+
+  .mobile-nav-overlay,
+  .mobile-nav-menu {
+    display: none;
+    position: fixed;
+  }
+
+  .mobile-nav-overlay {
+    inset: 0;
+    z-index: 140;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .22s ease-out;
+  }
+
+  .mobile-nav-menu {
+    left: 10px;
+    right: 10px;
+    top: 56px;
+    z-index: 160;
+    max-height: 55vh;
+    overflow-y: auto;
+    border: 1px solid rgba(224, 180, 88, .26);
+    border-radius: 8px;
+    background: rgba(7, 20, 33, .98);
+    box-shadow: 0 22px 58px rgba(0, 0, 0, .42);
+    padding: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-12px);
+    transition: opacity .22s ease-out, transform .22s ease-out;
+  }
+
+  .mobile-nav-menu a {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 8px;
+    color: var(--chalk);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .mobile-nav-menu a:hover,
+  .mobile-nav-menu a:focus-visible {
+    color: var(--chalk);
+    background: rgba(243, 239, 228, .08);
+  }
+
+  .mobile-nav-menu a[aria-current="page"] {
+    color: var(--gold);
+    background: rgba(224, 180, 88, .08);
+  }
+
+  .mobile-nav-menu a[aria-current="page"]::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .current-page-tag {
+    margin-left: auto;
+    border: 1px solid rgba(224, 180, 88, .32);
+    border-radius: 999px;
+    padding: 2px 8px;
+    color: var(--pitch);
+    background: var(--gold);
+    font-size: 11px;
+    font-weight: 900;
+  }
+
+  .game-shell {
+    width: min(100%, 1280px);
+    margin: 0 auto;
+    padding: 22px 24px 30px;
+  }
+
+  .game-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  .eyebrow {
+    margin-bottom: 4px;
+    color: var(--gold);
+    font-family: 'Archivo', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .12em;
+  }
+
+  h1 {
+    color: var(--chalk);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 32px;
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  h1 em {
+    color: var(--gold);
+    font-style: normal;
+  }
+
+  .run-summary {
+    display: flex;
+    align-items: center;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .summary-item {
+    min-width: 110px;
+    padding: 8px 14px;
+    border-right: 1px solid var(--line);
+  }
+
+  .summary-item:last-child { border-right: 0; }
+
+  .summary-item span {
+    display: block;
+    color: var(--chalk-dim);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .summary-item strong {
+    display: block;
+    min-height: 22px;
+    margin-top: 1px;
+    color: var(--chalk);
+    font-family: 'Archivo', 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  #bestStars { color: var(--gold); }
+
+  .mission-bar {
+    display: grid;
+    grid-template-columns: minmax(170px, .8fr) minmax(300px, 1.6fr) minmax(250px, 1fr);
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 12px;
+    padding: 11px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .mission-title {
+    min-width: 0;
+  }
+
+  .mission-title > span {
+    display: block;
+    color: var(--cyan);
+    font-family: 'Archivo', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .mission-title h2 {
+    overflow: hidden;
+    margin-top: 1px;
+    color: var(--chalk);
+    font-size: 17px;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: 0;
+  }
+
+  .mission-meta {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+    color: var(--chalk-dim);
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .mission-meta span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mission-meta span + span::before { content: '·'; margin-right: 6px; color: var(--gold); }
+
+  .level-picker {
+    display: flex;
+    min-width: 0;
+    padding: 3px 2px 6px;
+    gap: 7px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-color: rgba(224, 180, 88, .45) transparent;
+  }
+
+  .level-button {
+    position: relative;
+    width: 36px;
+    flex: 0 0 36px;
+    height: 36px;
+    border: 1px solid rgba(243, 239, 228, .2);
+    border-radius: 6px;
+    background: rgba(0, 0, 0, .14);
+    color: var(--chalk-dim);
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    scroll-snap-align: center;
+  }
+
+  .level-button::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    width: calc(var(--stars, 0) * 4px);
+    max-width: 12px;
+    height: 2px;
+    background: var(--gold);
+    transform: translateX(-50%);
+  }
+
+  .level-button[data-stars="1"] { --stars: 1; }
+  .level-button[data-stars="2"] { --stars: 2; }
+  .level-button[data-stars="3"] { --stars: 3; }
+
+  .level-button:hover:not(:disabled) {
+    color: var(--chalk);
+    border-color: rgba(224, 180, 88, .55);
+    background: rgba(224, 180, 88, .08);
+  }
+
+  .level-button.active {
+    color: var(--pitch);
+    border-color: var(--gold);
+    background: var(--gold);
+  }
+
+  .level-button.active::after { background: var(--pitch); }
+
+  .level-button:disabled {
+    cursor: not-allowed;
+    opacity: .28;
+  }
+
+  .telemetry {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .flight-status {
+    min-width: 90px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--chalk);
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, .12);
+  }
+
+  .telemetry-value {
+    color: var(--chalk-dim);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .telemetry-value strong {
+    margin-left: 4px;
+    color: var(--chalk);
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+  }
+
+  .game-stage {
+    width: 100%;
+    display: grid;
+    place-items: center;
+    background: var(--space);
+  }
+
+  .playfield {
+    position: relative;
+    width: min(100%, calc((100svh - 264px) * 16 / 9));
+    max-width: 100%;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid rgba(224, 180, 88, .28);
+    border-radius: var(--radius);
+    background: var(--space);
+    box-shadow: 0 20px 54px rgba(0, 0, 0, .24);
+  }
+
+  #gameCanvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .dependency-note {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    border: 1px solid rgba(224, 180, 88, .35);
+    border-radius: 6px;
+    padding: 4px 7px;
+    color: var(--gold);
+    background: rgba(7, 19, 32, .88);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  .result-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+    background: rgba(5, 15, 26, .8);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+
+  .result-dialog {
+    width: min(430px, 92%);
+    max-width: 100%;
+    min-width: 0;
+    border: 1px solid rgba(224, 180, 88, .45);
+    border-radius: 8px;
+    padding: 22px;
+    background: rgba(9, 28, 45, .97);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .4);
+    text-align: center;
+  }
+
+  .result-kicker {
+    color: var(--cyan);
+    font-family: 'Archivo', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+  }
+
+  .result-dialog h2 {
+    margin-top: 5px;
+    color: var(--chalk);
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: 0;
+  }
+
+  .result-stars {
+    min-height: 40px;
+    margin-top: 4px;
+    color: var(--gold);
+    font-size: 30px;
+    letter-spacing: 0;
+  }
+
+  .result-metrics {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin-top: 8px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .result-metric {
+    min-width: 0;
+    padding: 10px 5px;
+    border-right: 1px solid var(--line);
+  }
+
+  .result-metric:last-child { border-right: 0; }
+
+  .result-metric span {
+    display: block;
+    color: var(--chalk-dim);
+    font-size: 10px;
+  }
+
+  .result-metric strong {
+    display: block;
+    margin-top: 2px;
+    color: var(--chalk);
+    font-family: 'Archivo', 'Noto Sans SC', sans-serif;
+    font-size: 14px;
+  }
+
+  .result-actions {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .game-controls {
+    display: grid;
+    grid-template-columns: 44px minmax(150px, 220px) 44px 44px 44px;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .touch-aim-panel {
+    display: none;
+    width: min(100%, 720px);
+    grid-template-columns: 1fr 1fr;
+    gap: 10px 16px;
+    margin: 10px auto 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(103, 232, 249, .2);
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(15, 23, 42, .88), rgba(30, 27, 75, .72));
+  }
+
+  .aim-control {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 8px;
+    color: var(--chalk-dim);
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .aim-control input[type='range'] {
+    width: 100%;
+    height: 32px;
+    accent-color: var(--cyan);
+    cursor: pointer;
+    touch-action: pan-x;
+  }
+
+  .touch-aim-hint {
+    grid-column: 1 / -1;
+    color: rgba(226, 232, 240, .55);
+    font-size: 10px;
+    text-align: center;
+  }
+
+  @media (pointer: coarse) {
+    .touch-aim-panel { display: grid; }
+    #gameCanvas { cursor: default !important; }
+  }
+
+  .control-button {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(243, 239, 228, .2);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, .14);
+    color: var(--chalk);
+    font-weight: 800;
+    cursor: pointer;
+    transition: border-color .18s ease, background .18s ease, color .18s ease, transform .18s ease;
+  }
+
+  .control-button:hover:not(:disabled) {
+    border-color: rgba(224, 180, 88, .55);
+    background: rgba(243, 239, 228, .08);
+  }
+
+  .control-button:active:not(:disabled) { transform: translateY(1px); }
+
+  .control-button.primary {
+    border-color: var(--gold);
+    background: var(--gold);
+    color: var(--pitch);
+  }
+
+  .control-button.primary:hover:not(:disabled) {
+    border-color: #edc878;
+    background: #edc878;
+  }
+
+  .control-button:disabled {
+    cursor: not-allowed;
+    opacity: .35;
+  }
+
+  .control-button[aria-pressed="false"] { color: var(--chalk-dim); }
+
+  .control-button svg,
+  .control-button i {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+  }
+
+  .result-actions .control-button { padding: 0 12px; }
+
+  .local-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 12px;
+    color: var(--chalk-dim);
+    font-size: 11px;
+  }
+
+  .local-note svg,
+  .local-note i {
+    width: 14px;
+    height: 14px;
+    color: var(--ok);
+  }
+
+  .site-footer {
+    padding: 0 20px 34px;
+    color: var(--chalk-dim);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .beian-links {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px 16px;
+    flex-wrap: wrap;
+    max-width: 100%;
+  }
+
+  .beian-links a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .gongan-beian {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .gongan-beian img {
+    width: 18px;
+    height: 20px;
+  }
+
+  body.game-focus-mode { overflow: hidden; }
+
+  .game-shell:fullscreen,
+  .game-shell.focus-mode {
+    width: 100vw;
+    max-width: none;
+    height: 100svh;
+    overflow: auto;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-left: max(12px, env(safe-area-inset-left));
+    background: var(--pitch);
+  }
+
+  .game-shell.focus-mode {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+  }
+
+  @media (max-width: 980px) {
+    .mission-bar {
+      grid-template-columns: minmax(150px, .8fr) minmax(300px, 1.5fr);
+    }
+
+    .telemetry {
+      grid-column: 1 / -1;
+      justify-content: center;
+    }
+  }
+
+  @media (max-height: 760px) and (min-width: 769px) {
+    .game-shell { padding-top: 10px; }
+    .game-header { margin-bottom: 8px; }
+    .eyebrow { font-size: 9px; }
+    h1 { font-size: 26px; }
+    .summary-item { padding-block: 5px; }
+    .mission-bar {
+      margin-bottom: 8px;
+      padding-block: 7px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    body { padding-top: calc(56px + env(safe-area-inset-top)); }
+
+    .g-nav {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      gap: 10px;
+      height: calc(56px + env(safe-area-inset-top));
+      min-height: calc(56px + env(safe-area-inset-top));
+      padding: calc(6px + env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 6px max(10px, env(safe-area-inset-left));
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 170;
+    }
+
+    .mobile-nav-button { display: inline-flex; }
+
+    .g-nav.mobile-menu-open .mobile-menu-icon span:nth-child(1) {
+      top: 6px;
+      transform: rotate(45deg);
+    }
+
+    .g-nav.mobile-menu-open .mobile-menu-icon span:nth-child(2) { opacity: 0; }
+
+    .g-nav.mobile-menu-open .mobile-menu-icon span:nth-child(3) {
+      top: 6px;
+      transform: rotate(-45deg);
+    }
+
+    .nav-brand {
+      min-width: 0;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 17px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-links { display: none; }
+
+    .mobile-nav-overlay,
+    .mobile-nav-menu { display: block; }
+
+    .mobile-nav-overlay.is-open,
+    .mobile-nav-menu.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-nav-menu.is-open { transform: translateY(0); }
+
+    .mobile-nav-menu {
+      top: calc(56px + env(safe-area-inset-top));
+      left: max(10px, env(safe-area-inset-left));
+      right: max(10px, env(safe-area-inset-right));
+    }
+
+    .game-shell {
+      padding: 14px 10px 24px;
+    }
+
+    .game-header {
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: stretch;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .eyebrow { font-size: 9px; }
+    h1 { font-size: 24px; }
+
+    .title-block {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: none;
+    }
+
+    .eyebrow { max-width: 45%; }
+    .run-summary { width: 100%; min-width: 0; justify-content: stretch; }
+
+    .summary-item {
+      min-width: 0;
+      flex: 1;
+      padding: 6px 7px;
+      text-align: center;
+    }
+
+    .summary-item span { font-size: 9px; }
+
+    .summary-item strong {
+      min-height: 18px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .mission-bar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 9px;
+      padding: 8px 0;
+    }
+
+    .mission-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .mission-title h2 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .mission-meta { flex-basis: 100%; }
+
+    .level-picker {
+      gap: 6px;
+    }
+
+    .level-button {
+      width: 46px;
+      flex-basis: 46px;
+      height: 44px;
+    }
+
+    .touch-aim-panel { display: grid; }
+
+    .telemetry {
+      grid-column: auto;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .flight-status { min-width: 0; font-size: 11px; }
+    .telemetry-value { font-size: 10px; }
+    .telemetry-value strong { font-size: 11px; }
+
+    .playfield {
+      width: 100%;
+      border-radius: 6px;
+    }
+
+    .game-controls {
+      grid-template-columns: 44px minmax(104px, 1fr) 44px 44px 44px;
+      gap: 6px;
+      margin-top: 9px;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .control-button {
+      min-height: 44px;
+      border-radius: 6px;
+    }
+
+    .local-note { margin-top: 9px; }
+
+    .site-footer {
+      padding: 0 14px calc(28px + env(safe-area-inset-bottom));
+      line-height: 1.7;
+    }
+
+    .beian-links {
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .result-dialog {
+      width: min(520px, 100%);
+      max-height: calc(100svh - 72px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: 16px;
+      border-radius: 18px 18px 0 0;
+    }
+
+    .result-overlay {
+      position: fixed;
+      inset: calc(56px + env(safe-area-inset-top)) 0 0;
+      z-index: 240;
+      align-items: end;
+      justify-items: center;
+      padding: 12px 10px max(10px, env(safe-area-inset-bottom));
+    }
+
+    .result-dialog h2 { font-size: 19px; }
+    .result-stars { min-height: 34px; font-size: 25px; }
+    .result-metric { padding: 7px 3px; }
+    .result-actions { margin-top: 12px; }
+  }
+
+  @media (max-width: 390px) {
+    .game-header { align-items: stretch; }
+    .title-block { max-width: none; }
+    .summary-item { padding-inline: 4px; }
+    .summary-item strong { font-size: 10px; }
+    .level-picker { gap: 5px; }
+    .game-controls { grid-template-columns: 44px minmax(80px, 1fr) 44px 44px 44px; gap: 5px; }
+  }
+
+  @media (orientation: landscape) and (max-height: 520px) and (max-width: 960px) {
+    body {
+      padding-top: calc(48px + env(safe-area-inset-top));
+      overflow: hidden;
+    }
+
+    .g-nav {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) 44px;
+      gap: 10px;
+      height: calc(48px + env(safe-area-inset-top));
+      min-height: calc(48px + env(safe-area-inset-top));
+      padding: calc(2px + env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 2px max(8px, env(safe-area-inset-left));
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 170;
+    }
+
+    .mobile-nav-button { display: inline-flex; }
+
+    .nav-brand {
+      min-width: 0;
+      justify-content: center;
+      overflow: hidden;
+      font-size: 17px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-links { display: none; }
+
+    .mobile-nav-overlay,
+    .mobile-nav-menu { display: block; }
+
+    .mobile-nav-overlay.is-open,
+    .mobile-nav-menu.is-open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-nav-menu.is-open { transform: translateY(0); }
+
+    .mobile-nav-menu {
+      top: calc(48px + env(safe-area-inset-top));
+      left: max(8px, env(safe-area-inset-left));
+      right: max(8px, env(safe-area-inset-right));
+      max-height: calc(100svh - 56px - env(safe-area-inset-top));
+    }
+
+    .game-shell {
+      height: calc(100svh - 48px - env(safe-area-inset-top));
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 224px;
+      grid-template-rows: minmax(0, 1fr) auto auto;
+      grid-template-areas:
+        'stage mission'
+        'stage aim'
+        'stage controls';
+      gap: 8px;
+      padding: 8px max(8px, env(safe-area-inset-right)) 8px max(8px, env(safe-area-inset-left));
+    }
+
+    .game-header,
+    .local-note,
+    .site-footer { display: none; }
+
+    .mission-bar {
+      grid-area: mission;
+      align-self: stretch;
+      align-items: stretch;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0;
+      padding: 8px 0;
+    }
+
+    .mission-title {
+      display: block;
+    }
+
+    .mission-title h2 { margin-top: 2px; }
+
+    .level-picker {
+      gap: 5px;
+    }
+
+    .level-button { height: 44px; }
+
+    .telemetry {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .flight-status { grid-column: 1 / -1; }
+
+    .game-stage {
+      grid-area: stage;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .playfield {
+      width: min(100%, calc((100svh - 64px) * 16 / 9));
+      max-height: 100%;
+    }
+
+    .game-controls {
+      grid-area: controls;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin: 0;
+      padding: 0 0 env(safe-area-inset-bottom);
+    }
+
+    .touch-aim-panel {
+      grid-area: aim;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2px;
+      margin: 0;
+      padding: 4px 8px;
+    }
+
+    .touch-aim-hint { display: none; }
+    .aim-control input[type='range'] { height: 26px; }
+
+    #launchButton {
+      grid-column: 1 / -1;
+      grid-row: 1;
+      min-height: 44px;
+    }
+
+    #resetButton { grid-column: 1; grid-row: 2; }
+    #pauseButton { grid-column: 2; grid-row: 2; }
+    #soundButton { grid-column: 3; grid-row: 2; }
+    #fullscreenButton { grid-column: 4; grid-row: 2; }
+
+    .control-button { min-height: 44px; }
+
+    .result-dialog {
+      width: min(520px, 92%);
+      max-height: calc(100svh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      padding: 9px 14px;
+      border-radius: 12px;
+    }
+
+    .result-overlay {
+      inset: calc(48px + env(safe-area-inset-top)) 0 0;
+      align-items: center;
+      padding: 6px max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+    }
+
+    .result-kicker { display: none; }
+    .result-dialog h2 { margin-top: 0; font-size: 17px; }
+    .result-stars { min-height: 25px; font-size: 21px; }
+    .result-metrics { margin-top: 3px; }
+    .result-metric { padding: 4px 3px; }
+    .result-actions { margin-top: 6px; }
+    .result-actions .control-button { min-height: 40px; }
+
+    .game-shell:fullscreen,
+    .game-shell.focus-mode {
+      height: 100svh;
+      padding-top: max(8px, env(safe-area-inset-top));
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 380px) and (max-width: 700px) {
+    .game-shell {
+      grid-template-columns: minmax(0, 1fr) clamp(256px, 50vw, 280px);
+      grid-template-rows: minmax(0, 1fr) 44px;
+      grid-template-areas:
+        'stage mission'
+        'stage controls';
+    }
+
+    .mission-bar {
+      gap: 6px;
+      padding-block: 4px;
+    }
+
+    .touch-aim-panel { display: none; }
+
+    .game-controls {
+      grid-template-columns: minmax(0, 1fr) repeat(4, 44px);
+      grid-template-rows: 44px;
+    }
+
+    #launchButton { grid-column: 1; grid-row: 1; }
+    #resetButton { grid-column: 2; grid-row: 1; }
+    #pauseButton { grid-column: 3; grid-row: 1; }
+    #soundButton { grid-column: 4; grid-row: 1; }
+    #fullscreenButton { grid-column: 5; grid-row: 1; }
+  }
+
+  #global-loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--pitch);
+    transition: opacity .5s ease, visibility .5s ease;
+  }
+
+  #global-loading-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .gl-container {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gl-canvas {
+    z-index: 2;
+    border-radius: 50%;
+    box-shadow: inset -8px -8px 16px rgba(0, 0, 0, .4), inset 8px 8px 16px rgba(255, 255, 255, .05);
+  }
+
+  .gl-whirl {
+    position: absolute;
+    inset: -8px;
+    z-index: 1;
+    border: 2px solid transparent;
+    border-top-color: var(--gold);
+    border-right-color: rgba(224, 180, 88, .3);
+    border-radius: 50%;
+    animation: gl-spin 1.5s linear infinite;
+  }
+
+  .gl-whirl::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border: 2px solid transparent;
+    border-bottom-color: rgba(242, 239, 231, .6);
+    border-left-color: rgba(242, 239, 231, .1);
+    border-radius: 50%;
+    animation: gl-spin-reverse 2s linear infinite;
+  }
+
+  @keyframes gl-spin { to { transform: rotate(360deg); } }
+  @keyframes gl-spin-reverse { to { transform: rotate(-360deg); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+<main class="game-shell" id="gameShell">
+  <header class="game-header">
+    <div class="title-block">
+      <div class="eyebrow">ORBITAL SLINGSHOT</div>
+      <h1>星轨<em>弹射</em></h1>
+    </div>
+    <div class="run-summary" aria-label="当前进度">
+      <div class="summary-item"><span>进度</span><strong id="levelCounter">轨道 1 / 50</strong></div>
+      <div class="summary-item"><span>本轮</span><strong id="attemptCounter">尝试 01</strong></div>
+      <div class="summary-item"><span>最佳</span><strong id="bestStars">尚无记录</strong></div>
+    </div>
+  </header>
+
+  <section class="mission-bar" aria-label="关卡和飞行状态">
+    <div class="mission-title">
+      <span id="levelCode">FIRST LIGHT</span>
+      <h2 id="levelName">初光校准</h2>
+      <div class="mission-meta"><span id="chapterName">基础航天</span><span id="mechanicName">惯性飞行</span></div>
+    </div>
+    <div class="level-picker" id="levelPicker" aria-label="选择已解锁轨道"></div>
+    <div class="telemetry">
+      <div class="flight-status"><span class="status-dot" aria-hidden="true"></span><span id="statusText">准备发射</span></div>
+      <div class="telemetry-value">方位<strong id="angleValue">-20°</strong></div>
+      <div class="telemetry-value">推力<strong id="powerValue">63%</strong></div>
+    </div>
+  </section>
+
+  <section class="game-stage" id="gameStage" aria-label="星轨弹射游戏场景">
+    <div class="playfield">
+      <canvas id="gameCanvas" aria-label="拖动调整航向和推力" aria-describedby="gameInstructions"></canvas>
+      <p class="sr-only" id="gameInstructions">触屏可用滑杆精准调整后点击发射，鼠标可拖动并松手发射；也可使用方向键调整，空格键发射。</p>
+      <div class="dependency-note" id="dependencyNote" hidden>兼容引擎</div>
+      <div class="result-overlay" id="resultOverlay" hidden>
+        <div class="result-dialog" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+          <div class="result-kicker">ORBIT LOCKED</div>
+          <h2 id="resultTitle">轨道接入成功</h2>
+          <div class="result-stars" id="resultStars" aria-label="本次获得三颗星">★★★</div>
+          <div class="result-metrics">
+            <div class="result-metric"><span>得分</span><strong id="resultScore">3,250</strong></div>
+            <div class="result-metric"><span>飞行</span><strong id="resultTime">2.03 秒</strong></div>
+            <div class="result-metric"><span>速度</span><strong id="resultPower">6.1</strong></div>
+          </div>
+          <div class="result-actions">
+            <button type="button" class="control-button" id="replayButton"><i data-lucide="rotate-ccw" aria-hidden="true">↻</i><span>再来一次</span></button>
+            <button type="button" class="control-button primary" id="nextButton"><i data-lucide="arrow-right" aria-hidden="true">→</i><span>下一轨道</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="touch-aim-panel" aria-label="触控瞄准">
+    <label class="aim-control" for="angleSlider"><span>航向</span><input id="angleSlider" type="range" min="-180" max="180" step="1" value="-20" aria-label="调整航向角度"></label>
+    <label class="aim-control" for="powerSlider"><span>推力</span><input id="powerSlider" type="range" min="0" max="100" step="1" value="63" aria-label="调整发射推力"></label>
+    <p class="touch-aim-hint">点按或拖动星图设定航向，再点“发射”·也可用滑杆精准调整</p>
+  </div>
+
+  <div class="game-controls" aria-label="飞行控制">
+    <button type="button" class="control-button" id="resetButton" aria-label="重新开始" title="重新开始"><i data-lucide="rotate-ccw" aria-hidden="true">↻</i></button>
+    <button type="button" class="control-button primary" id="launchButton"><i data-lucide="rocket" aria-hidden="true">↑</i><span>发射</span></button>
+    <button type="button" class="control-button" id="pauseButton" aria-label="暂停飞行" title="暂停飞行" disabled><i data-lucide="pause" aria-hidden="true">Ⅱ</i></button>
+    <button type="button" class="control-button" id="soundButton" aria-label="关闭音效" title="关闭音效" aria-pressed="true"><i data-lucide="volume-2" aria-hidden="true">声</i></button>
+    <button type="button" class="control-button" id="fullscreenButton" aria-label="进入全屏" title="进入全屏"><i data-lucide="maximize-2" aria-hidden="true">全</i></button>
+  </div>
+
+  <div class="local-note"><i data-lucide="shield-check" aria-hidden="true">✓</i><span>关卡、星级与音效偏好均保存在本机</span></div>
+  <div class="sr-only" id="liveStatus" aria-live="polite"></div>
+</main>
+
+<script type="module" src="orbit-launch.js?v=4"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+{
+  "batch": "D-key-ui",
+  "visualRules": {
+    "salary": "只使用 ¥ + 工资字段，不出现在摸鱼币交易组件中",
+    "fishCoin": "独立自定义鱼币图形 + 钱包字段，不显示兑换关系",
+    "palette": {
+      "canvas": "#08142E",
+      "panel": "#10294E",
+      "mint": "#49E6C2",
+      "coral": "#FF6B6B"
+    }
+  },
+  "assets": [
+    {
+      "file": "ui-slack-house-642x940.png",
+      "size": [
+        642,
+        940
+      ],
+      "alpha": false,
+      "anchor": null,
+      "use": "摸鱼屋 V1A：乐园/商店/收藏最小入口与 3 件商品",
+      "electron": "设计方向稿；应按组件实现，不建议作为整屏位图直接运行"
+    },
+    {
+      "file": "ui-muyu-game-480x600.png",
+      "size": [
+        480,
+        600
+      ],
+      "alpha": false,
+      "anchor": null,
+      "use": "木鱼暴击 V1A 游戏壳与进行中界面",
+      "electron": "设计方向稿；应按组件实现，不建议作为整屏位图直接运行"
+    },
+    {
+      "file": "ui-purchase-equip-success-642x940.png",
+      "size": [
+        642,
+        940
+      ],
+      "alpha": false,
+      "anchor": null,
+      "use": "购买成功 + 已装备确认；钱包与工资严格分离",
+      "electron": "设计方向稿；应按组件实现，不建议作为整屏位图直接运行"
+    }
+  ]
+}

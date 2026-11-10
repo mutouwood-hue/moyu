@@ -1,0 +1,19 @@
+{
+  "image": "pixel-frame-9slice.png",
+  "size": [
+    96,
+    96
+  ],
+  "slice": {
+    "left": 24,
+    "top": 24,
+    "right": 24,
+    "bottom": 24
+  },
+  "contentPadding": {
+    "left": 24,
+    "top": 24,
+    "right": 24,
+    "bottom": 24
+  }
+}

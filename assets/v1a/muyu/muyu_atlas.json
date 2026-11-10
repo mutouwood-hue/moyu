@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "canvas": { "width": 512, "height": 512 },
+  "anchor": { "x": 256, "y": 470 },
+  "states": {
+    "normal": ["muyu_normal_idle.png", "muyu_normal_pressed.png", "muyu_normal_rebound.png"],
+    "gold": ["muyu_gold_idle.png", "muyu_gold_pressed.png", "muyu_gold_rebound.png"],
+    "boss": ["muyu_boss_idle.png", "muyu_boss_pressed.png", "muyu_boss_rebound.png"]
+  },
+  "timingMs": [0, 85, 170],
+  "effects": ["muyu_strike_01.png", "muyu_strike_02.png", "muyu_strike_03.png", "muyu_strike_04.png", "muyu_strike_05.png", "muyu_strike_06.png"]
+}

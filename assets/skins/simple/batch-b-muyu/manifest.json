@@ -1,0 +1,259 @@
+{
+  "batch": "B-muyu",
+  "assets": {
+    "muyu_normal_idle.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "normal 木鱼 idle 状态",
+      "electron": true
+    },
+    "muyu_normal_pressed.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "normal 木鱼 pressed 状态",
+      "electron": true
+    },
+    "muyu_normal_rebound.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "normal 木鱼 rebound 状态",
+      "electron": true
+    },
+    "muyu_gold_idle.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "gold 木鱼 idle 状态",
+      "electron": true
+    },
+    "muyu_gold_pressed.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "gold 木鱼 pressed 状态",
+      "electron": true
+    },
+    "muyu_gold_rebound.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "gold 木鱼 rebound 状态",
+      "electron": true
+    },
+    "muyu_boss_idle.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "boss 木鱼 idle 状态",
+      "electron": true
+    },
+    "muyu_boss_pressed.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "boss 木鱼 pressed 状态",
+      "electron": true
+    },
+    "muyu_boss_rebound.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "boss 木鱼 rebound 状态",
+      "electron": true
+    },
+    "muyu_hammer_01.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        405,
+        260
+      ],
+      "use": "木槌角度 1，旋转基准在握柄端",
+      "electron": true
+    },
+    "muyu_hammer_02.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        405,
+        260
+      ],
+      "use": "木槌角度 2，旋转基准在握柄端",
+      "electron": true
+    },
+    "muyu_hammer_03.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        405,
+        260
+      ],
+      "use": "木槌角度 3，旋转基准在握柄端",
+      "electron": true
+    },
+    "muyu_strike_01.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 1/6",
+      "electron": true
+    },
+    "muyu_strike_02.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 2/6",
+      "electron": true
+    },
+    "muyu_strike_03.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 3/6",
+      "electron": true
+    },
+    "muyu_strike_04.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 4/6",
+      "electron": true
+    },
+    "muyu_strike_05.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 5/6",
+      "electron": true
+    },
+    "muyu_strike_06.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "普通木鱼敲击关键帧 6/6",
+      "electron": true
+    },
+    "muyu_reduced_motion.png": {
+      "size": [
+        512,
+        512
+      ],
+      "alpha": true,
+      "anchor": [
+        256,
+        470
+      ],
+      "use": "减少动态效果：用一次明暗/缩放反馈替代位移动画",
+      "electron": true
+    },
+    "muyu_atlas.json": {
+      "size": null,
+      "alpha": null,
+      "anchor": null,
+      "use": "敲击关键帧顺序与时长",
+      "electron": true
+    }
+  }
+}

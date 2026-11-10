@@ -1,0 +1,5 @@
+body.theme-office-night .float{background:linear-gradient(145deg,#07142d,#10294e);color:#eef7ff;border-color:#284c72}
+body.theme-simple .float{border-radius:12px;box-shadow:none;border:1px solid #b8c7cf}
+body.floating-pixel .float{border:5px solid #49e6c2;border-radius:0;box-shadow:0 0 0 4px #07142d,8px 8px 0 rgba(7,20,45,.28)}
+body.floating-pixel *{border-radius:0!important}
+body.floating-pixel .amount-row strong{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}

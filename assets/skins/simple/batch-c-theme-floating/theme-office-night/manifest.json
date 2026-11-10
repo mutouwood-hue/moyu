@@ -1,0 +1,31 @@
+{
+  "id": "theme-office-night",
+  "name": "办公室夜班",
+  "assetVersion": 1,
+  "type": "theme",
+  "tokens": {
+    "--color-canvas": "#08142E",
+    "--color-panel": "#10294E",
+    "--color-panel-elevated": "#16355F",
+    "--color-text-primary": "#F4FBFF",
+    "--color-text-secondary": "#9BB3C9",
+    "--color-accent": "#49E6C2",
+    "--color-danger": "#FF6B6B",
+    "--color-border": "#28527B",
+    "--shadow-card": "0 14px 40px rgba(0,0,0,.28)",
+    "--radius-card": "24px",
+    "--font-numeric": "system-ui, monospace",
+    "--asset-dashboard-bg": "themes/theme-office-night/theme-office-night-preview.webp"
+  },
+  "salaryVisual": {
+    "symbol": "¥",
+    "role": "real-salary",
+    "colorToken": "--color-text-primary"
+  },
+  "fishCoinVisual": {
+    "role": "virtual-currency",
+    "icon": "custom-fish-coin",
+    "colorToken": "--color-accent"
+  },
+  "notes": "真实工资与摸鱼币为独立视觉与数据域，无兑换关系。"
+}

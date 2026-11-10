@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>挣点窝囊费 · 悬浮窗</title>
+  <link rel="stylesheet" href="assets/icons/phosphor/style.css">
+  <link rel="stylesheet" href="floating.css?v=1.1.0">
+  <link rel="stylesheet" href="v1a-floating.css?v=1.2.0">
+</head>
+<body>
+  <main class="float" id="float">
+    <header>
+      <img src="assets/app-icon.png" alt="" class="avatar">
+      <div class="brand"><b>今日窝囊费</b><span>+<em id="ps">¥0.0000</em> / 秒</span></div>
+      <div class="window-buttons">
+        <button id="eye" aria-label="隐藏金额" title="隐藏金额"><i class="ph ph-eye"></i></button>
+        <button id="expand" aria-label="展开主看板" title="展开主看板"><i class="ph ph-arrows-out-simple"></i></button>
+        <button id="close" aria-label="退出" title="退出"><i class="ph ph-x"></i></button>
+      </div>
+    </header>
+
+    <nav class="modes" aria-label="工作模式">
+      <button id="modeDefault" data-mode="default">默认</button>
+      <button id="modeWork" data-mode="work" class="active">工作</button>
+      <button id="modeSlack" data-mode="slack">摸鱼</button>
+    </nav>
+
+    <section class="amount-row">
+      <div><span>今日结余：</span><strong id="earned">¥0.00</strong></div>
+      <div class="mini-jar" id="miniJar" aria-hidden="true">
+        <img src="assets/generated/salary-jar-empty-ui.png" class="jar-layer" alt="">
+        <div class="mini-fill" id="miniFill"><img src="assets/generated/salary-coins-fill.png" class="coin-pile-layer" alt=""></div>
+        <div id="coinStream"></div>
+      </div>
+    </section>
+
+    <section class="progress-row"><span>工时</span><div class="bar"><i id="fill"></i></div><b id="pct">0%</b></section>
+    <footer><span id="statusCopy">拖拽移动 · 双击展开看板</span><span id="slackCopy"></span></footer>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+  <script src="engine.js?v=1.1.0"></script><script src="float-render.js?v=1.1.0"></script>
+</body>
+</html>

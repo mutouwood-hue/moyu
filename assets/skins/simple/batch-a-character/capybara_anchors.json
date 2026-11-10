@@ -1,0 +1,39 @@
+{
+  "canvas": {
+    "base": [
+      1024,
+      1024
+    ],
+    "master": [
+      2048,
+      2048
+    ]
+  },
+  "baseAnchor": {
+    "x": 512,
+    "y": 944,
+    "meaning": "bottom-center foot baseline"
+  },
+  "masterAnchor": {
+    "x": 1024,
+    "y": 1888
+  },
+  "attachmentAnchors": {
+    "head": {
+      "x": 512,
+      "y": 250
+    },
+    "body": {
+      "x": 512,
+      "y": 650
+    },
+    "leftHand": {
+      "x": 330,
+      "y": 690
+    },
+    "rightHand": {
+      "x": 690,
+      "y": 690
+    }
+  }
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>木鱼暴击</title>
+  <link rel="stylesheet" href="../assets/icons/phosphor/style.css">
+  <link rel="stylesheet" href="muyu.css">
+</head>
+<body>
+  <main class="game-shell">
+    <header>
+      <div><span class="eyebrow">摸鱼乐园</span><h1>木鱼暴击</h1></div>
+      <div class="coin-wallet" aria-label="摸鱼币余额"><span class="fish-coin">◎</span><b id="wallet">0</b></div>
+    </header>
+    <section class="status-strip">
+      <div><span>倒计时</span><b id="timer">00:30</b></div>
+      <div><span>功德</span><b id="score">0</b></div>
+      <div><span>连击</span><b class="mint" id="combo">0</b></div>
+      <div><span>暴击</span><b class="coral" id="critical">0</b></div>
+    </section>
+    <button class="muyu-stage" id="muyuButton" aria-label="敲一下木鱼" disabled>
+      <img id="muyu" src="../assets/v1a/muyu/muyu_normal_idle.png" alt="普通木鱼">
+      <img id="hammer" src="../assets/v1a/muyu/muyu_hammer_01.png" alt="">
+      <span id="kindLabel">普通木鱼</span>
+      <i id="gain">+1</i>
+    </button>
+    <button class="primary" id="start">开始 30 秒挑战</button>
+    <p class="hint" id="hint">点击木鱼累积功德；黄金木鱼奖励更多，老板木鱼会打断连击。</p>
+    <section class="result" id="result" hidden>
+      <span>本次功德</span><strong id="resultScore">0</strong>
+      <p>最高连击 <b id="resultCombo">0</b> · 暴击 <b id="resultCritical">0</b> 次</p>
+      <div><span class="fish-coin">◎</span>获得 <b id="reward">--</b> 摸鱼币</div>
+      <button class="primary" id="again">再来一局</button>
+    </section>
+    <footer>ESC 随时退出 · 摸鱼币与真实工资互不兑换</footer>
+  </main>
+  <script src="muyu.js"></script>
+</body>
+</html>

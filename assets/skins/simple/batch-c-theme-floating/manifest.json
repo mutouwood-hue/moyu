@@ -1,0 +1,76 @@
+{
+  "batch": "C-theme-floating",
+  "assets": [
+    {
+      "file": "theme-office-night/theme-office-night-preview@2x.webp",
+      "size": [
+        1280,
+        960
+      ],
+      "alpha": false,
+      "anchor": null,
+      "use": "办公室夜班主题商品大预览",
+      "electron": true
+    },
+    {
+      "file": "theme-office-night/theme-office-night-preview.webp",
+      "size": [
+        640,
+        480
+      ],
+      "alpha": false,
+      "anchor": null,
+      "use": "办公室夜班商店标准预览",
+      "electron": true
+    },
+    {
+      "file": "theme-office-night/manifest.json",
+      "size": null,
+      "alpha": null,
+      "anchor": null,
+      "use": "受控语义 token 主题 manifest",
+      "electron": true
+    },
+    {
+      "file": "floating-pixel/floating-pixel-372x299.png",
+      "size": [
+        372,
+        299
+      ],
+      "alpha": true,
+      "anchor": null,
+      "use": "像素悬浮窗实际尺寸预览",
+      "electron": true
+    },
+    {
+      "file": "floating-pixel/floating-pixel-744x598.png",
+      "size": [
+        744,
+        598
+      ],
+      "alpha": true,
+      "anchor": null,
+      "use": "像素悬浮窗 @2x 预览",
+      "electron": true
+    },
+    {
+      "file": "floating-pixel/pixel-frame-9slice.png",
+      "size": [
+        96,
+        96
+      ],
+      "alpha": true,
+      "anchor": null,
+      "use": "像素悬浮窗 9-slice 边框",
+      "electron": true
+    },
+    {
+      "file": "floating-pixel/nine-slice.json",
+      "size": null,
+      "alpha": null,
+      "anchor": null,
+      "use": "9-slice 切片参数",
+      "electron": true
+    }
+  ]
+}

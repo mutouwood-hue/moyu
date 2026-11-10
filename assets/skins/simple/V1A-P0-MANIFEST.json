@@ -1,0 +1,251 @@
+{
+  "package": "moyu-v1a-p0-core-assets",
+  "version": "1.0.0",
+  "visualLanguage": {
+    "deepNavy": "#08142E",
+    "mint": "#49E6C2",
+    "coral": "#FF6B6B"
+  },
+  "rules": {
+    "salaryDomain": "真实工资：¥ + salary/work fields，仅计薪展示与历史记录使用",
+    "fishCoinDomain": "摸鱼币：custom-fish-coin + wallet/transaction fields，仅游戏奖励、商店与收藏使用",
+    "exchange": "不存在兑换、汇率或能力加成关系",
+    "transparentAnchor": "角色与道具统一底部中心锚点；具体坐标见各批 manifest/anchor JSON"
+  },
+  "batches": [
+    {
+      "id": "A",
+      "dir": "batch-a-character",
+      "purpose": "卡皮巴拉母版/三态/reduced-motion/睡衣 overlay"
+    },
+    {
+      "id": "B",
+      "dir": "batch-b-muyu",
+      "purpose": "普通/黄金/老板木鱼、木槌、敲击关键帧"
+    },
+    {
+      "id": "C",
+      "dir": "batch-c-theme-floating",
+      "purpose": "办公室夜班主题、像素悬浮窗、9-slice"
+    },
+    {
+      "id": "D",
+      "dir": "batch-d-key-ui",
+      "purpose": "摸鱼屋、木鱼暴击、购买装备成功关键界面"
+    }
+  ],
+  "electron": {
+    "runtimeReady": [
+      "batch-a-character/*.png",
+      "batch-a-character/*.json",
+      "batch-b-muyu/*.png",
+      "batch-b-muyu/*.json",
+      "batch-c-theme-floating/theme-office-night/*.webp",
+      "batch-c-theme-floating/theme-office-night/manifest.json",
+      "batch-c-theme-floating/floating-pixel/*.png",
+      "batch-c-theme-floating/floating-pixel/*.json"
+    ],
+    "designReference": [
+      "batch-d-key-ui/ui-*.png",
+      "batch-d-key-ui/ui-*@2x.webp"
+    ]
+  },
+  "files": [
+    {
+      "path": "batch-a-character/batch-a-preview.jpg",
+      "sha256": "11b0bf688cd4ed1336ed30cf3f4975b1b8586ca47c89ceadc5aab6a9fd94cdbf"
+    },
+    {
+      "path": "batch-a-character/capybara_anchors.json",
+      "sha256": "558e521c2ff267a623bf0db80f72c5a8af0da204ee5a0a254e2d5de4b4faf6ea"
+    },
+    {
+      "path": "batch-a-character/capybara_master.png",
+      "sha256": "7ab103860d5bb47efabd9e9249ac3a13db245244a6caa717b3c29aab4910301b"
+    },
+    {
+      "path": "batch-a-character/capybara_offwork.png",
+      "sha256": "c18638e845a0e3a4fc1b972af89bce71bba24ca21798dc3f717d0f6de4b7724a"
+    },
+    {
+      "path": "batch-a-character/capybara_offwork_reduced_motion.png",
+      "sha256": "c18638e845a0e3a4fc1b972af89bce71bba24ca21798dc3f717d0f6de4b7724a"
+    },
+    {
+      "path": "batch-a-character/capybara_pajamas_preview.png",
+      "sha256": "2f976e913e053d67f15e7f9cba55ae234069f3f0953a8fbf9e49d6ec8d0470ec"
+    },
+    {
+      "path": "batch-a-character/capybara_slack.png",
+      "sha256": "655a7d4e2bb155a9769b3dc4cf55e2215266512af077507a37985997ca26be8b"
+    },
+    {
+      "path": "batch-a-character/capybara_slack_reduced_motion.png",
+      "sha256": "655a7d4e2bb155a9769b3dc4cf55e2215266512af077507a37985997ca26be8b"
+    },
+    {
+      "path": "batch-a-character/capybara_work.png",
+      "sha256": "146f2263c2f06d28e44560927a4b9b2f154d6a06a12961984ecd487ee7587288"
+    },
+    {
+      "path": "batch-a-character/capybara_work_reduced_motion.png",
+      "sha256": "146f2263c2f06d28e44560927a4b9b2f154d6a06a12961984ecd487ee7587288"
+    },
+    {
+      "path": "batch-a-character/manifest.json",
+      "sha256": "a28ec112767b265d85176b7dcc96e5d8e16a50668cada83702011a4bffc5a7ad"
+    },
+    {
+      "path": "batch-a-character/pajamas_overlay_master.png",
+      "sha256": "2dfb5487b3b33e26debccea71e36d59dc250f7a95a34ee3811697b90c80605f8"
+    },
+    {
+      "path": "batch-b-muyu/batch-b-preview.jpg",
+      "sha256": "48aaea3d321714d9e401f68c56a8e4fdeb00b02905467f408b478eee578c76f1"
+    },
+    {
+      "path": "batch-b-muyu/manifest.json",
+      "sha256": "16f210a85dca7d51f676ce9fb1edf487bee6ea1de9c31973f6e283803e88e1c0"
+    },
+    {
+      "path": "batch-b-muyu/muyu_atlas.json",
+      "sha256": "7fac36c2990757548122dc2946985e9add835e8b4bff56181a87980880f4892c"
+    },
+    {
+      "path": "batch-b-muyu/muyu_boss_idle.png",
+      "sha256": "f11080bd189b8ef29f859bd112dbd5fbd9fa2415a47d7926a178743b805f71aa"
+    },
+    {
+      "path": "batch-b-muyu/muyu_boss_pressed.png",
+      "sha256": "406a9af0bf09745d42b69cb215242a31ff729a3f83a26964e974b8861694fcb4"
+    },
+    {
+      "path": "batch-b-muyu/muyu_boss_rebound.png",
+      "sha256": "aba5cd8035fd761fa911c0400fe7ae81eee16da81f273e8ffee7de8e2f76d822"
+    },
+    {
+      "path": "batch-b-muyu/muyu_gold_idle.png",
+      "sha256": "140963776e632c17aef199e34c6c026f5889cb969a70ff7d5e1a3e45c1262fb6"
+    },
+    {
+      "path": "batch-b-muyu/muyu_gold_pressed.png",
+      "sha256": "5c1f1f7aad56cac00770c956043b41482cbb2a6046318de64aafa5991fff0026"
+    },
+    {
+      "path": "batch-b-muyu/muyu_gold_rebound.png",
+      "sha256": "6c18ef1a799fd8eeb8e1e2cfed8f4f35be8231a054c0706ae20fa360e4ce451b"
+    },
+    {
+      "path": "batch-b-muyu/muyu_hammer_01.png",
+      "sha256": "caa0c9cc50238faf4e1ef82725ff14d05eb0d4b38b53429b9949712ac6af5cd7"
+    },
+    {
+      "path": "batch-b-muyu/muyu_hammer_02.png",
+      "sha256": "5610d43edec6cde0a80ab3bcf5ee8c69e78808e9790d444984e446e1944408e3"
+    },
+    {
+      "path": "batch-b-muyu/muyu_hammer_03.png",
+      "sha256": "94d762d9cac2f8c6973bc43a86e8bf602ee7667b19d9aec5ddd031c1d3313342"
+    },
+    {
+      "path": "batch-b-muyu/muyu_normal_idle.png",
+      "sha256": "67cdb81d6c4d7004a8ec472dd241a48feef5d7deaf8946e64539a4b31631559f"
+    },
+    {
+      "path": "batch-b-muyu/muyu_normal_pressed.png",
+      "sha256": "79eba47f0fefe264a0102f3c6b34c5ebd7b155697645314524ba447722b869c3"
+    },
+    {
+      "path": "batch-b-muyu/muyu_normal_rebound.png",
+      "sha256": "b1407fe31661ec578b059e51a187c21b3efc9a2bd22e7c71a674b4111cdcecb2"
+    },
+    {
+      "path": "batch-b-muyu/muyu_reduced_motion.png",
+      "sha256": "79eba47f0fefe264a0102f3c6b34c5ebd7b155697645314524ba447722b869c3"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_01.png",
+      "sha256": "73f9c4bf3cf50f99bff1569464f41075a814fdda37fbecfe84be4ede6039741e"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_02.png",
+      "sha256": "5cf442188d64b685b5efac51d84ea9c3c9906ae3c3cc125e9db03337c7c6e15e"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_03.png",
+      "sha256": "c44600df9cb097e54f224a37b4469a93c0388cd276c50ea81c0d74f82dcdcdeb"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_04.png",
+      "sha256": "4dc6a2bb3ce657a64278d55a051c874e70dd0a5eb64e88f80be826b34a771e13"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_05.png",
+      "sha256": "362f779988db8b8b70594fc7a6e44b94345bc1f6ec29bcae137c4d00c87707af"
+    },
+    {
+      "path": "batch-b-muyu/muyu_strike_06.png",
+      "sha256": "1e0c38b2a0b65ee321274bd0483185960a3be1c7f1bca63e5d58f2d9878b70f3"
+    },
+    {
+      "path": "batch-c-theme-floating/floating-pixel/floating-pixel-372x299.png",
+      "sha256": "acec9a7db080940c11474c4dd906bcab139ae5843c0e14acfcdf002edf441c4f"
+    },
+    {
+      "path": "batch-c-theme-floating/floating-pixel/floating-pixel-744x598.png",
+      "sha256": "08a3badfd398748a0752d2aeda11e357628d8626c1c55230df9a425abaf80306"
+    },
+    {
+      "path": "batch-c-theme-floating/floating-pixel/nine-slice.json",
+      "sha256": "996f9beb18ab8286c0c39e0282852b0b2b59d82ea7be87cdf54d1b49e82ca8eb"
+    },
+    {
+      "path": "batch-c-theme-floating/floating-pixel/pixel-frame-9slice.png",
+      "sha256": "62dee357b9afb1d946ef21c12b3c2075a13c916e87e6b1f2eb3a33cd5644a9ec"
+    },
+    {
+      "path": "batch-c-theme-floating/manifest.json",
+      "sha256": "221c6982fc6d4241a0766cc7b98aa774bd5877a216a2a86919430044d2c5d3b9"
+    },
+    {
+      "path": "batch-c-theme-floating/theme-office-night/manifest.json",
+      "sha256": "7b019984ccf711f4e6d07cb523994169ff4f1e838944f8d1ec757f9ef25b0bca"
+    },
+    {
+      "path": "batch-c-theme-floating/theme-office-night/theme-office-night-preview.webp",
+      "sha256": "f27f533dddc289dfc9642cc470b77bf60e2b1e6d7db81bac6f631cb68e9c3ff2"
+    },
+    {
+      "path": "batch-c-theme-floating/theme-office-night/theme-office-night-preview@2x.webp",
+      "sha256": "ffc0a8711b884ed0d4a4eb4b089d566f74086047e2996a8a3501a5fc4d9e1fe4"
+    },
+    {
+      "path": "batch-d-key-ui/manifest.json",
+      "sha256": "a14660e6e50d6c970ea15fcee3648fa6f183ef27cc84b45226cadc9bf2ec2466"
+    },
+    {
+      "path": "batch-d-key-ui/ui-muyu-game-480x600.png",
+      "sha256": "65074ddfb13bfae6d80da04c19a1ddc76c433e7a8074574925c4fd3776803798"
+    },
+    {
+      "path": "batch-d-key-ui/ui-muyu-game-480x600@2x.webp",
+      "sha256": "375bb3b9ad984c1ebf42bdb2039770cabe02f2f7e6b4df306eafb79aca27b71f"
+    },
+    {
+      "path": "batch-d-key-ui/ui-purchase-equip-success-642x940.png",
+      "sha256": "6773846d8ce0eda322e5771be922e81b102dd5a02d2c3567cdfe70cefbf2ccf7"
+    },
+    {
+      "path": "batch-d-key-ui/ui-purchase-equip-success-642x940@2x.webp",
+      "sha256": "86e01186987a3ce77669146114978b7ba26ce2327c8a32d606555e506790c9d1"
+    },
+    {
+      "path": "batch-d-key-ui/ui-slack-house-642x940.png",
+      "sha256": "6b1b9ffd45d2c696bdd0c22d6b763d2405bcf831b73e9c4725529571d76caca7"
+    },
+    {
+      "path": "batch-d-key-ui/ui-slack-house-642x940@2x.webp",
+      "sha256": "cc19f10cd0cf2c54b619e65d723dc2239606f38148dfc1df3913b8f95d2f76f2"
+    }
+  ]
+}

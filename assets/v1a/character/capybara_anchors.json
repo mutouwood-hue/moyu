@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "coordinateSystem": "normalized",
+  "defaultAnchor": { "x": 0.5, "y": 1 },
+  "assets": {
+    "capybara_master.png": { "state": "neutral" },
+    "capybara_work.png": { "state": "work" },
+    "capybara_slack.png": { "state": "slack" },
+    "capybara_offwork.png": { "state": "offwork" },
+    "capybara_pajamas.png": { "state": "pajamas", "equipDirectly": true }
+  }
+}

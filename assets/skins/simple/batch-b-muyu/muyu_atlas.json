@@ -1,0 +1,38 @@
+{
+  "frameSize": [
+    512,
+    512
+  ],
+  "anchor": [
+    256,
+    470
+  ],
+  "strikeSequence": [
+    {
+      "file": "muyu_strike_01.png",
+      "durationMs": 55
+    },
+    {
+      "file": "muyu_strike_02.png",
+      "durationMs": 55
+    },
+    {
+      "file": "muyu_strike_03.png",
+      "durationMs": 55
+    },
+    {
+      "file": "muyu_strike_04.png",
+      "durationMs": 70
+    },
+    {
+      "file": "muyu_strike_05.png",
+      "durationMs": 70
+    },
+    {
+      "file": "muyu_strike_06.png",
+      "durationMs": 70
+    }
+  ],
+  "loop": false,
+  "reducedMotion": "muyu_reduced_motion.png"
+}
