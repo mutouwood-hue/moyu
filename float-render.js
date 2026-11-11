@@ -6,7 +6,7 @@
   var cfg = Object.assign({}, ENGINE.DEFAULTS, { dailyStats: {}, firedMilestones: [] });
   var hidden = false;
   var $ = function (id) { return document.getElementById(id); };
-  var jarPresenter = JAR_COINS.createPresenter($('miniFill'), $('coinStream'), $('miniJar'), 24);
+  var jarPresenter = JAR_COINS.createPresenter($('miniFill'), $('coinStream'), $('miniJar'), 84);
 
   function reducedMotion() { return cfg.reduceMotion === 'on' || (cfg.reduceMotion === 'system' && cfg.systemReduceMotion); }
   function updateMode() {
@@ -21,7 +21,7 @@
     $('ps').textContent = ENGINE.fmt4(ENGINE.perSecond(cfg));
     $('earned').textContent = hidden ? '¥ • • •' : ENGINE.fmt(earned);
     $('fill').style.width = (p * 100) + '%'; $('pct').textContent = Math.round(progress * 100) + '%';
-    jarPresenter.update(earned, cfg, !hidden && !document.hidden && cfg.animations !== false && !reducedMotion()); $('miniFill').style.visibility = hidden ? 'hidden' : ''; $('coinStream').style.visibility = hidden ? 'hidden' : '';
+    jarPresenter.update(earned, cfg, !hidden && !document.hidden && cfg.animations !== false && !reducedMotion(), ENGINE.dailySalary(cfg) > 0 ? earned / ENGINE.dailySalary(cfg) : 0); $('miniFill').style.visibility = hidden ? 'hidden' : ''; $('coinStream').style.visibility = hidden ? 'hidden' : '';
     var stats = cfg.dailyStats || {};
     $('slackCopy').textContent = cfg.mode === 'slack' ? '摸鱼 ' + ENGINE.fmt(stats.slackEarned || 0) : '';
     $('statusCopy').textContent = progress >= 1 ? '今日通关 · 双击查看结算' : progress >= .9 ? '胜利就在右下角' : '拖拽移动 · 双击展开看板';

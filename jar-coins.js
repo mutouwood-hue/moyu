@@ -17,21 +17,34 @@
     var counts = denoms.map(function (value) { var n = Math.floor(left / value); left -= n * value; return n; });
     return { counts: counts, remainder: left, totalCount: counts.reduce(function (a, b) { return a + b; }, 0) };
   }
+  // Visual pieces represent shares of today's target, while breakdown remains exact.
+  function visualBreakdown(amount, cfg, progress, limit) {
+    var actual = breakdown(amount, cfg), max = limit || 84;
+    if (!Number.isFinite(progress)) return actual;
+    var ratio = Math.max(0, Math.min(1, progress));
+    var count = ratio > 0 ? Math.max(1, Math.round(ratio * max)) : 0;
+    if (!count || !actual.totalCount) return {counts:[0,0,0,0],remainder:actual.remainder,totalCount:0};
+    var shares = actual.counts.map(function (n) { return n / actual.totalCount * count; });
+    var counts = shares.map(Math.floor), remaining = count-counts.reduce(function (a,b) { return a+b; },0);
+    var rank = shares.map(function (n,i) { return {i:i,fraction:n-counts[i]}; }).sort(function (a,b) { return b.fraction-a.fraction || a.i-b.i; });
+    for (var i=0;i<remaining;i++) counts[rank[i].i]++;
+    return {counts:counts,remainder:actual.remainder,totalCount:count};
+  }
   function layout(value, limit) {
-    var pieces = [], heights = [0,0,0,0,0,0,0,0], max = limit || 96;
+    var pieces = [], heights = [0,0,0,0,0,0,0,0], max = limit || 84;
     value.counts.forEach(function (count, kind) {
       for (var i = 0; i < count && pieces.length < max; i++) {
         var index = pieces.length, column = index % 8;
         pieces.push({key:kind + ':' + i, kind:kind, column:column,
-          left:12 + column * 9.5 + ((index * 7) % 5 - 2) * .45,
+          left:8 + column * 10.2 + ((index * 7) % 5 - 2) * .45,
           bottom:8 + heights[column], rotation:((index * 37) % 49) - 24});
-        heights[column] += kind >= 2 ? 2.4 : 5.7;
+        heights[column] += 7.5;
       }
     });
     return pieces;
   }
-  function render(element, amount, cfg, limit) {
-    var value = breakdown(amount, cfg), max = limit || 96;
+  function render(element, amount, cfg, limit, progress) {
+    var value = visualBreakdown(amount, cfg, progress, limit), max = limit || 84;
     var signature = JSON.stringify([value.counts, max]);
     if (element.dataset.coinSignature !== signature) {
       element.dataset.coinSignature = signature;
@@ -62,7 +75,7 @@
     Composite.add(engine.world, [Bodies.rectangle(140, 342, 230, 12, wall),
       Bodies.rectangle(23, 200, 12, 285, wall), Bodies.rectangle(257, 200, 12, 285, wall)]);
     function add(piece, falling) {
-      var radius = piece.kind >= 2 ? 6 : 10.5;
+      var radius = 14;
       var x = falling ? 110 + (piece.column % 4) * 17 : 280 * piece.left / 100 + radius;
       var y = falling ? 48 : 367 * (1 - piece.bottom / 100) - radius;
       var body = Bodies.circle(x, y, radius, { restitution: .18, friction: .45,
@@ -79,7 +92,7 @@
     function stop() { if (frame) global.cancelAnimationFrame(frame); frame = 0; running = false; lastTime = 0; }
     function reset(snapshot) {
       stop(); world = null; entries.clear();
-      render(layer, snapshot.amount, snapshot.cfg, limit);
+      render(layer, snapshot.amount, snapshot.cfg, limit, snapshot.progress);
       stream.replaceChildren();
     }
     function paint() {
@@ -114,7 +127,7 @@
         });
         if (impact && onImpact) onImpact();
       });
-      layout(breakdown(snapshot.amount, snapshot.cfg), limit).forEach(function (piece) { add(piece, false); });
+      layout(visualBreakdown(snapshot.amount, snapshot.cfg, snapshot.progress, limit), limit).forEach(function (piece) { add(piece, false); });
       paint();
     }
     function add(piece, falling) {
@@ -126,15 +139,15 @@
       entries.set(piece.key, { node: node, body: world.add(piece, falling) });
     }
     return {
-      update: function (amount, cfg, animate) {
-        var snapshot = { amount: amount, cfg: Object.assign({}, cfg) };
+      update: function (amount, cfg, animate, progress) {
+        var snapshot = { amount: amount, cfg: Object.assign({}, cfg), progress: progress };
         var denoms = JSON.stringify(denominations(cfg));
         if (!animate || !Matter || !global.requestAnimationFrame) {
           reset(snapshot);
         } else if (!world || denoms !== previousDenoms || (previousAmount != null && amount < previousAmount)) {
           stop(); initialise(snapshot); start();
         } else {
-          var pieces = layout(breakdown(amount, cfg), limit);
+          var pieces = layout(visualBreakdown(amount, cfg, progress, limit), limit);
           var wanted = new Set(pieces.map(function (piece) { return piece.key; }));
           // Finish a fall before a denomination exchange removes that body.
           var fallingWouldDisappear = Array.from(entries.values()).some(function (entry) {
@@ -160,7 +173,7 @@
       }
     };
   }
-  var api = { keys: keys, names: names, defaults: defaults, denominations: denominations, breakdown: breakdown, layout: layout, render: render, createPhysicsWorld: createPhysicsWorld, createPresenter: createPresenter };
+  var api = { keys: keys, names: names, defaults: defaults, denominations: denominations, breakdown: breakdown, visualBreakdown: visualBreakdown, layout: layout, render: render, createPhysicsWorld: createPhysicsWorld, createPresenter: createPresenter };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   global.JAR_COINS = api;
 })(typeof window !== 'undefined' ? window : globalThis);

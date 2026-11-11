@@ -14,7 +14,7 @@
   var settlementOpen = false;
   var lastCoinSound = 0;
   var $ = function (id) { return document.getElementById(id); };
-  var jarPresenter = JAR_COINS.createPresenter($('jarFill'), $('coinStream'), $('jarStage'), 96, function () { playCoinSound(); });
+  var jarPresenter = JAR_COINS.createPresenter($('jarFill'), $('coinStream'), $('jarStage'), 84, function () { playCoinSound(); });
 
   var MODE = {
     default: { name: '默认', headline: '今天也在稳稳挣钱', note: '不赶不卷，窝囊费依旧准时到账。' },
@@ -111,9 +111,9 @@
     $('dashDaily').textContent = money(daily);
     $('dashRemaining').textContent = money(remaining);
     $('finishAt').textContent = finishTime();
-    var coins = jarPresenter.update(earned, cfg, !document.hidden && $('view-dash').classList.contains('active') && cfg.viewMode === 'jar' && cfg.animations !== false && !reducedMotion());
+    var coins = jarPresenter.update(earned, cfg, !document.hidden && $('view-dash').classList.contains('active') && cfg.viewMode === 'jar' && cfg.animations !== false && !reducedMotion(), daily > 0 ? earned / daily : 0);
     var coinText = JAR_COINS.names.map(function (name, i) { return name + ' ' + coins.counts[i] + ' 枚'; }).join(' · ');
-    $('jarCoinSummary').textContent = coinText + (coins.remainder ? ' · 未折算 ¥' + (coins.remainder / 100).toFixed(2) : '') + (coins.totalCount > 96 ? ' · 画面显示 96/' + coins.totalCount + ' 枚' : '');
+    $('jarCoinSummary').textContent = '币堆按工资进度示意 · 实际：' + coinText + (coins.remainder ? ' · 未折算 ¥' + (coins.remainder / 100).toFixed(2) : '');
     $('jarView').setAttribute('aria-label', '今日工资罐，' + coinText);
     $('largeFill').style.width = (p * 100) + '%';
     $('largePct').textContent = pct(progress);

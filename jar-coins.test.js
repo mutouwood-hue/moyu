@@ -38,3 +38,16 @@ test('物理世界中落下的币会碰撞底部币堆，并可最终静止', ()
   assert.ok(falling.position.y < 340, '币不得穿过罐底');
   assert.ok(lower.isSleeping && falling.isSleeping, '堆积后应休眠，避免持续抖动');
 });
+
+test('币堆以当日日薪进度填充，同时真实面额计数保持精确', () => {
+  assert.equal(jar.visualBreakdown(0, {}, 0, 84).totalCount, 0);
+  assert.equal(jar.visualBreakdown(101.15, {}, .44, 84).totalCount, 37);
+  assert.equal(jar.visualBreakdown(229.89, {}, 1, 84).totalCount, 84);
+  assert.equal(jar.visualBreakdown(229.89, {}, 2, 84).totalCount, 84);
+  assert.deepEqual(jar.breakdown(229.89).counts, [22,9,8,9]);
+  const Matter=require('matter-js'),world=jar.createPhysicsWorld(Matter);
+  const pieces=jar.layout(jar.visualBreakdown(229.89,{},1,84),84).map(p=>world.add(p,false));
+  for(let i=0;i<1200;i++) Matter.Engine.update(world.engine,1000/60);
+  assert.ok(Math.min(...pieces.map(p=>p.position.y))<70,'完成日薪时币堆应靠近罐口');
+  assert.ok(pieces.every(p=>p.position.x>20&&p.position.x<260),'币堆不应穿出罐壁');
+});
