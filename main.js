@@ -216,6 +216,31 @@ function createJimaoGame() {
   win.on('closed', () => { if (jimaoWin === win) jimaoWin = null; });
 }
 
+// Third-party games run without access to the app IPC or network and keep separate saves.
+const standaloneGames = {
+  ship: { title: '运输船射击', file: 'transport-ship.html' },
+  racing: { title: '赛车', file: 'racing.html' }
+};
+const standaloneWindows = new Map();
+function createStandaloneGame(id) {
+  const game = standaloneGames[id];
+  if (!game) return;
+  const existing = standaloneWindows.get(id);
+  if (existing && !existing.isDestroyed()) { existing.show(); existing.focus(); return; }
+  const win = new BrowserWindow({
+    width: 1120, height: 800, minWidth: 720, minHeight: 540,
+    backgroundColor: '#0b0d0f', title: game.title + ' · 摸鱼乐园',
+    icon: path.join(__dirname, 'assets', process.platform === 'darwin' ? 'app-icon.png' : 'wnf-icon.ico'),
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, partition: 'persist:moyu-' + id }
+  });
+  standaloneWindows.set(id, win);
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (_details, callback) => callback({ cancel: true }));
+  win.webContents.on('will-navigate', event => event.preventDefault());
+  win.loadFile(path.join(__dirname, 'game', game.file));
+  win.on('closed', () => { if (standaloneWindows.get(id) === win) standaloneWindows.delete(id); });
+}
+
 function createMuyuGame() {
   if (muyuWin && !muyuWin.isDestroyed()) {
     muyuWin.show();
@@ -305,6 +330,7 @@ app.whenReady().then(() => {
     }
     saveConfig(); broadcast();
   });
+  ipcMain.on('open-standalone-game', (event, id) => { if (mainWin && event.sender === mainWin.webContents && Object.hasOwn(standaloneGames, id)) createStandaloneGame(id); });
   ipcMain.on('open-defense', () => createDefenseGame());
   ipcMain.on('defense-boss', event => { if (defenseWin && event.sender === defenseWin.webContents) toggleDefenseBoss(); });
   const isDefense = event => defenseWin && !defenseWin.isDestroyed() && event.sender === defenseWin.webContents;

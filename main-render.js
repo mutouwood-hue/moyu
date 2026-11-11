@@ -325,6 +325,8 @@
     } catch (_) { showToastDirect('解锁未完成，请重试。'); }
     finally { $('openJimao').disabled = false; }
   };
+  if ($('openShip')) $('openShip').onclick = function () { if (ipc) ipc.send('open-standalone-game', 'ship'); };
+  if ($('openRacing')) $('openRacing').onclick = function () { if (ipc) ipc.send('open-standalone-game', 'racing'); };
   if ($('openDefense')) $('openDefense').onclick = function () { if (ipc) ipc.send('open-defense'); };
   if ($('openMuyu')) $('openMuyu').onclick = function () { if (ipc) ipc.send('open-muyu'); };
   if ($('openOrbit')) $('openOrbit').onclick = function () { if (ipc) ipc.send('open-orbit'); };
