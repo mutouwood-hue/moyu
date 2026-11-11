@@ -1,0 +1,65 @@
+name: Manual desktop release
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing draft release tag
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npm run dist:win -- --config.directories.output=release-ci-win
+      - name: Verify and upload Windows installer
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $files = @(Get-ChildItem 'release-ci-win/*-setup.exe')
+          if ($files.Count -ne 1 -or $files[0].Length -lt 50000000) { throw 'Missing or incomplete Windows installer' }
+          Copy-Item $files[0].FullName 'moyu-v1.2.0-windows-x64-setup.exe'
+          gh release upload "$env:RELEASE_TAG" 'moyu-v1.2.0-windows-x64-setup.exe' --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
+  macos:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - name: Build macOS DMG and ZIP
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run dist:mac -- --config.directories.output=release-ci-mac
+      - name: Verify and upload macOS packages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for arch in arm64 x64; do
+            dmg="release-ci-mac/挣点窝囊费-v1.2.0-${arch}.dmg"
+            zip="release-ci-mac/挣点窝囊费-v1.2.0-${arch}.zip"
+            hdiutil verify "$dmg" >/dev/null
+            unzip -tq "$zip"
+            cp "$dmg" "moyu-v1.2.0-macos-${arch}.dmg"
+            cp "$zip" "moyu-v1.2.0-macos-${arch}.zip"
+            gh release upload "$RELEASE_TAG" "moyu-v1.2.0-macos-${arch}.dmg" "moyu-v1.2.0-macos-${arch}.zip" --clobber
+          done
