@@ -31,7 +31,9 @@
       <span>本次功德</span><strong id="resultScore">0</strong>
       <p>最高连击 <b id="resultCombo">0</b> · 暴击 <b id="resultCritical">0</b> 次</p>
       <div><span class="fish-coin">◎</span>获得 <b id="reward">--</b> 摸鱼币</div>
-      <button class="primary" id="again">再来一局</button>
+      <p id="saveError" role="alert" hidden>保存失败，奖励尚未到账。请检查本地存储后重试。</p>
+      <button class="primary" id="retrySave" hidden>重试保存</button>
+      <button class="primary" id="again" disabled>再来一局</button>
     </section>
     <footer>ESC 随时退出 · 摸鱼币与真实工资互不兑换</footer>
   </main>

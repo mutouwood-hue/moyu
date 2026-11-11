@@ -8,12 +8,13 @@
   var firstRender = true;
   var previousEarned = 0;
   var previousProgress = 0;
-  var pendingGain = 0;
   var selectedDate = new Date(); selectedDate.setHours(0, 0, 0, 0);
   var calCursor = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
   var toastQueue = [], toastTimer = null;
   var settlementOpen = false;
+  var lastCoinSound = 0;
   var $ = function (id) { return document.getElementById(id); };
+  var jarPresenter = JAR_COINS.createPresenter($('jarFill'), $('coinStream'), $('jarStage'), 96, function () { playCoinSound(); });
 
   var MODE = {
     default: { name: '默认', headline: '今天也在稳稳挣钱', note: '不赶不卷，窝囊费依旧准时到账。' },
@@ -27,13 +28,15 @@
     'theme-office-night': { name: '办公室夜班', price: 500, type: 'theme', image: 'assets/v1a/character/capybara_work.png' },
     'theme-simple': { name: '质朴', price: 300, type: 'theme', image: 'assets/skins/simple/batch-a-character/capybara_master.png' },
     'floating-pixel': { name: '像素悬浮窗', price: 400, type: 'floating', image: 'assets/generated/salary-jar-full-ui.png' },
-    'capybara-pajamas': { name: '睡衣卡皮巴拉', price: 200, type: 'capybara', image: 'assets/v1a/character/capybara_pajamas.png' }
+    'capybara-pajamas': { name: '睡衣卡皮巴拉', price: 200, type: 'capybara', image: 'assets/v1a/character/capybara_pajamas_clean.png' },
+    'defense-soldier': { name: '蓝军小队长', price: 200, type: 'capybara', image: 'game/defense-assets/soldier-clean.png' },
+    'defense-zombie': { name: '呆萌小僵尸', price: 200, type: 'capybara', image: 'game/defense-assets/zombie-clean.png' },
+    'defense-runner': { name: '疾跑小僵尸', price: 200, type: 'capybara', image: 'game/defense-assets/enemy-runner.png' },
+    'defense-boss': { name: '巨力首领', price: 200, type: 'capybara', image: 'game/defense-assets/boss-1.png' }
   };
 
-  function todayKey() {
-    var d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
+  function todayKey() { return keyFor(new Date()); }
+  function workDateKey() { return ENGINE.workDateKey(cfg, new Date()); }
   function keyFor(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
   function fmtDate(d) { return (d.getMonth() + 1) + '月' + d.getDate() + '日'; }
   function money(n) { return ENGINE.fmt(n); }
@@ -108,10 +111,10 @@
     $('dashDaily').textContent = money(daily);
     $('dashRemaining').textContent = money(remaining);
     $('finishAt').textContent = finishTime();
-    $('jarFill').style.clipPath = `inset(${(1 - p) * 100}% 0 0)`;
-    $('jarView').style.setProperty('--progress', (p * 100) + '%');
-    $('jarPct').textContent = pct(progress);
-    $('jarPct').hidden = p <= 0 || p >= 1;
+    var coins = jarPresenter.update(earned, cfg, !document.hidden && $('view-dash').classList.contains('active') && cfg.viewMode === 'jar' && cfg.animations !== false && !reducedMotion());
+    var coinText = JAR_COINS.names.map(function (name, i) { return name + ' ' + coins.counts[i] + ' 枚'; }).join(' · ');
+    $('jarCoinSummary').textContent = coinText + (coins.remainder ? ' · 未折算 ¥' + (coins.remainder / 100).toFixed(2) : '') + (coins.totalCount > 96 ? ' · 画面显示 96/' + coins.totalCount + ' 枚' : '');
+    $('jarView').setAttribute('aria-label', '今日工资罐，' + coinText);
     $('largeFill').style.width = (p * 100) + '%';
     $('largePct').textContent = pct(progress);
     $('progressCopy').textContent = statusCopy(progress, overtime);
@@ -133,10 +136,9 @@
     $('wishLabel').textContent = '下一个' + cfg.movieName;
     var mins = ENGINE.remainingMinutesForItem(cfg, earned, Number(cfg.itemPrice));
     $('conversionHint').textContent = mins === 0 ? '刚好又赚到一个' + cfg.itemName + '，小确幸已入账。' : '再工作约 ' + (mins == null ? '--' : mins) + ' 分钟，就能再赚到一个' + cfg.itemName + '。';
-    if (!firstRender && earned > previousEarned && progress > 0 && progress < 1) pendingGain += earned - previousEarned;
     checkMilestones(previousEarned, earned, previousProgress, progress);
     previousEarned = earned; previousProgress = raw;
-    if (cfg.autoSettlement && progress >= 1 && cfg.settlementSeenDate !== todayKey() && !settlementOpen) openSettlement();
+    if (cfg.autoSettlement && progress >= 1 && cfg.settlementSeenDate !== workDateKey() && !settlementOpen) openSettlement();
   }
 
   function milestoneAllowed(type) {
@@ -173,22 +175,10 @@
   $('toast').addEventListener('mouseleave', function () { if ($('toast').classList.contains('show')) toastTimer = setTimeout(function () { $('toastClose').click(); }, 1600); });
 
   function playCoinSound() {
-    if (!cfg.sound) return;
+    if (!cfg.sound || Date.now() - lastCoinSound < 5000) return;
+    lastCoinSound = Date.now();
     try { var ctx = new AudioContext(), osc = ctx.createOscillator(), gain = ctx.createGain(); osc.frequency.value = 880; gain.gain.setValueAtTime(.035, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + .1); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + .11); } catch (_) {}
   }
-  function flushCoinAnimation() {
-    if (pendingGain <= 0 || !cfg.animations || reducedMotion() || document.hidden || cfg.viewMode !== 'jar') { pendingGain = 0; return; }
-    var count = Math.min(3, Math.max(1, Math.ceil(pendingGain / Math.max(1, ENGINE.dailySalary(cfg) * .02))));
-    pendingGain = 0;
-    for (var i = 0; i < count; i++) (function (index) {
-      setTimeout(function () {
-        var img = document.createElement('img'); img.className = 'drop-coin'; img.src = 'assets/generated/salary-coin.png'; img.style.left = (42 + Math.random() * 12) + '%';
-        $('coinStream').appendChild(img); setTimeout(function () { img.remove(); }, 700);
-      }, index * 65);
-    })(i);
-    playCoinSound();
-  }
-
   function monthRows() {
     var y = calCursor.getFullYear(), m = calCursor.getMonth();
     return history().filter(function (row) { var d = new Date(row.date + 'T12:00:00'); return d.getFullYear() === y && d.getMonth() === m; });
@@ -221,8 +211,6 @@
     $('calGrid').innerHTML = html;
     var active = map[keyFor(selectedDate)], dow = ['周日','周一','周二','周三','周四','周五','周六'][selectedDate.getDay()];
     $('calDetail').innerHTML = '<b>' + fmtDate(selectedDate) + '</b> · ' + dow + '<br>' + (active ? '当日已赚：<b>' + money(active.earned) + '</b> · 工时 ' + pct(active.progress) : '暂无当日记录');
-    var workRows = rows.filter(function (r) { return r.progress > 0; }), complete = rows.filter(function (r) { return r.completed; });
-    $('calDays').textContent = workRows.length; $('calEarned').textContent = money(rows.reduce(function (s,r) { return s + (r.earned || 0); },0)); $('calCompletion').textContent = workRows.length ? Math.round(complete.length / workRows.length * 100) + '%' : '0%';
   }
   $('calGrid').onclick = function (e) { var button = e.target.closest('button[data-day]'); if (!button) return; selectedDate = new Date(calCursor.getFullYear(), calCursor.getMonth(), Number(button.dataset.day)); renderCalendar(); };
   $('calPrev').onclick = function () { calCursor = new Date(calCursor.getFullYear(), calCursor.getMonth() - 1, 1); renderCalendar(); };
@@ -236,11 +224,16 @@
     $('shiftHours').value = ENGINE.shiftHours(cfg).toFixed(1) + ' 小时';
     $('animations').checked = cfg.animations !== false; $('reduceMotion').value = cfg.reduceMotion || 'system'; $('sound').checked = !!cfg.sound; $('autoSettlement').checked = cfg.autoSettlement !== false;
     ['itemName','itemPrice','mealName','mealPrice','movieName','moviePrice'].forEach(function (id) { $(id).value = cfg[id]; });
+    JAR_COINS.keys.forEach(function (id, i) { $(id).value = cfg[id] == null ? JAR_COINS.defaults[i] : cfg[id]; });
+    $('jarConfigError').hidden = true;
   }
   Array.prototype.forEach.call($('system').children, function (b) { b.onclick = function () { cfg.system = b.dataset.v; applySettings(); }; });
   $('settingsForm').onsubmit = function (e) {
     e.preventDefault();
     var payload = { monthly:Number($('monthly').value)||0, system:cfg.system, shiftStart:$('shiftStart').value||'09:00', shiftEnd:$('shiftEnd').value||'18:00', animations:$('animations').checked, reduceMotion:$('reduceMotion').value, sound:$('sound').checked, autoSettlement:$('autoSettlement').checked };
+    JAR_COINS.keys.forEach(function (id) { payload[id] = Number($(id).value); });
+    if (!JAR_COINS.denominations(payload)) { $('jarConfigError').hidden = false; $('jarGold').focus(); return; }
+    $('jarConfigError').hidden = true;
     payload[cfg.system === 'free' ? 'freeDays' : 'payDays'] = Number($('days').value) || (cfg.system === 'free' ? 22 : 21.75);
     ['itemName','mealName','movieName'].forEach(function (id) { payload[id] = $(id).value.trim() || cfg[id]; });
     ['itemPrice','mealPrice','moviePrice'].forEach(function (id) { payload[id] = Number($(id).value) || cfg[id]; });
@@ -280,17 +273,21 @@
   function renderCompanion() {
     if (!$('dashboardCapybara')) return;
     var simple = cfg.equipped && cfg.equipped.theme === 'theme-simple';
-    var pajamas = cfg.equipped && cfg.equipped.capybara === 'capybara-pajamas';
+    var companion = cfg.equipped && cfg.equipped.capybara;
+    var pajamas = companion === 'capybara-pajamas';
+    var defenseCompanion = companion && companion.indexOf('defense-') === 0 && SHOP[companion];
+    document.querySelector('.mode-card').dataset.companion = defenseCompanion ? companion : '';
     var mode = cfg.mode || 'work';
-    var file = pajamas && !simple ? 'capybara_pajamas.png' : (mode === 'slack' ? 'capybara_slack.png' : ENGINE.timeProgress(cfg) >= 1 ? 'capybara_offwork.png' : 'capybara_work.png');
+    var file = pajamas && !simple ? 'capybara_pajamas_clean.png' : (mode === 'slack' ? 'capybara_slack.png' : ENGINE.timeProgress(cfg) >= 1 ? 'capybara_offwork.png' : 'capybara_work.png');
     var base = simple ? 'assets/skins/simple/batch-a-character/' : 'assets/v1a/character/';
-    $('dashboardCapybara').src = base + file;
-    $('dashboardCapybara').alt = mode === 'slack' ? '正在钓鱼摸鱼的卡皮巴拉' : ENGINE.timeProgress(cfg) >= 1 ? '准备下班的卡皮巴拉' : '正在工作的卡皮巴拉';
+    $('dashboardCapybara').src = defenseCompanion ? defenseCompanion.image : base + file;
+    $('dashboardCapybara').alt = defenseCompanion ? defenseCompanion.name : mode === 'slack' ? '正在钓鱼摸鱼的卡皮巴拉' : ENGINE.timeProgress(cfg) >= 1 ? '准备下班的卡皮巴拉' : '正在工作的卡皮巴拉';
   }
 
   function renderHouse() {
     if (!$('fishCoins')) return;
     $('fishCoins').textContent = Math.max(0, Number(cfg.fishCoins) || 0);
+    if ($('openJimao')) $('openJimao').textContent = (cfg.unlockedGames || []).includes('jimao') ? '进入几猫' : '解锁 · 100 摸鱼币';
     var stats = cfg.gameStats || {};
     $('muyuGames').textContent = stats.muyuGames || 0; $('muyuBest').textContent = stats.muyuBestScore || 0; $('muyuCombo').textContent = stats.muyuBestCombo || 0;
     var owned = Array.isArray(cfg.ownedItems) ? cfg.ownedItems : [];
@@ -302,16 +299,31 @@
       card.classList.toggle('owned', isOwned); card.classList.toggle('equipped', equipped);
     });
     var collected = owned.filter(function (id) { return SHOP[id]; });
+    var collectionSignature = JSON.stringify([collected, cfg.equipped || {}]);
+    if ($('collectionList').dataset.signature !== collectionSignature) {
     $('collectionList').innerHTML = collected.length ? collected.map(function (id) {
       var item = SHOP[id], equipped = cfg.equipped && cfg.equipped[item.type] === id;
       return '<article class="collection-item"><img src="' + item.image + '" alt=""><div><b>' + item.name + '</b><small>' + (equipped ? '当前使用中' : '已收藏') + '</small></div><button data-equip="' + id + '" ' + (equipped ? 'disabled' : '') + '>' + (equipped ? '使用中' : '装备') + '</button></article>';
     }).join('') : '<div class="cal-detail">完成一局木鱼暴击，攒币兑换第一件装扮吧。</div>';
+    $('collectionList').dataset.signature = collectionSignature;
+    }
     renderCompanion();
   }
   if ($('houseTabs')) $('houseTabs').onclick = function (event) {
     var button = event.target.closest('button[data-house]'); if (!button) return;
     Array.prototype.forEach.call($('houseTabs').children, function (b) { b.classList.toggle('active', b === button); });
     Array.prototype.forEach.call(document.querySelectorAll('.house-pane'), function (pane) { pane.classList.toggle('active', pane.id === 'house-' + button.dataset.house); });
+  };
+  if ($('openJimao')) $('openJimao').onclick = async function () {
+    if (!ipc) return;
+    var owned = (cfg.unlockedGames || []).includes('jimao');
+    if (!owned && !window.confirm('花费 100 摸鱼币解锁几猫？解锁后可以无限次免费游玩。')) return;
+    $('openJimao').disabled = true;
+    try {
+      var result = await ipc.invoke('open-jimao');
+      if (!result.ok) showToastDirect(result.code === 'INSUFFICIENT' ? '摸鱼币不足，需要 100 枚才能解锁。' : '解锁未保存，请重试。');
+    } catch (_) { showToastDirect('解锁未完成，请重试。'); }
+    finally { $('openJimao').disabled = false; }
   };
   if ($('openDefense')) $('openDefense').onclick = function () { if (ipc) ipc.send('open-defense'); };
   if ($('openMuyu')) $('openMuyu').onclick = function () { if (ipc) ipc.send('open-muyu'); };
@@ -335,15 +347,18 @@
 
   function openSettlement() {
     settlementOpen = true; var stats = todayStats();
-    $('settlementDate').textContent = fmtDate(new Date()) + ' · 今日通关'; $('settlementAmount').textContent = money(ENGINE.earnedToday(cfg)); $('settlementHours').textContent = ENGINE.fmtDuration(ENGINE.elapsedInShift(cfg)); $('settlementProgress').textContent = pct(ENGINE.timeProgress(cfg)); $('settlementSlack').textContent = ENGINE.fmtDuration(stats.slackSeconds); $('settlementItem').textContent = ENGINE.itemText(ENGINE.earnedToday(cfg),cfg.itemName,Number(cfg.itemPrice));
+    $('settlementDate').textContent = workDateKey().slice(5).replace('-', '月') + '日 · 今日通关'; $('settlementAmount').textContent = money(ENGINE.earnedToday(cfg)); $('settlementHours').textContent = ENGINE.fmtDuration(ENGINE.elapsedInShift(cfg)); $('settlementProgress').textContent = pct(ENGINE.timeProgress(cfg)); $('settlementSlack').textContent = ENGINE.fmtDuration(stats.slackSeconds); $('settlementItem').textContent = ENGINE.itemText(ENGINE.earnedToday(cfg),cfg.itemName,Number(cfg.itemPrice));
     $('settlementModal').hidden = false; document.body.style.overflow = 'hidden'; setTimeout(function () { $('settlementClose').focus(); },20);
   }
-  function closeSettlement() { settlementOpen = false; cfg.settlementSeenDate = todayKey(); $('settlementModal').hidden = true; document.body.style.overflow = ''; if (ipc) ipc.send('settlement-seen'); }
+  function closeSettlement() { settlementOpen = false; cfg.settlementSeenDate = workDateKey(); $('settlementModal').hidden = true; document.body.style.overflow = ''; if (ipc) ipc.send('settlement-seen'); }
   $('settlementClose').onclick = closeSettlement; $('settlementDone').onclick = closeSettlement;
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && settlementOpen) closeSettlement(); });
 
   $('toFloat').onclick = function () { if (ipc) ipc.send('to-float'); };
   $('quit').onclick = function () { if (ipc) ipc.send('confirm-quit'); };
+  [['windowMinimize','minimize'],['windowMaximize','maximize'],['windowClose','close']].forEach(function (pair) {
+    $(pair[0]).onclick = function () { if (ipc) ipc.send('main-window-action', pair[1]); };
+  });
 
   function renderAll() {
     document.body.classList.toggle('reduce-motion', reducedMotion() || cfg.animations === false);
@@ -361,5 +376,4 @@
     ipc.send('get-config');
   } else { applySettings(); renderAll(); }
   setInterval(renderAll, 1000);
-  setInterval(flushCoinAnimation, 5000);
 })();

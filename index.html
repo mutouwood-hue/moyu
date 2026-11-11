@@ -16,6 +16,11 @@
         <div><h1>挣点窝囊费</h1><p>实时结算你的窝囊费 · 配置在「设置」</p></div>
       </div>
       <div class="live-pill"><span></span><b id="headerState">工作中</b></div>
+      <div class="main-window-controls" aria-label="窗口控制">
+        <button id="windowMinimize" type="button" aria-label="最小化窗口" title="最小化"><i class="ph ph-minus"></i></button>
+        <button id="windowMaximize" type="button" aria-label="最大化或还原窗口" title="最大化或还原"><i class="ph ph-corners-out"></i></button>
+        <button id="windowClose" type="button" aria-label="关闭应用" title="关闭"><i class="ph ph-x"></i></button>
+      </div>
     </header>
 
     <main class="content" id="content">
@@ -40,16 +45,16 @@
                 <div><dt>距离装满</dt><dd id="dashRemaining">¥0.00</dd></div>
                 <div><dt>预计装满</dt><dd id="finishAt">--:--</dd></div>
               </dl>
+              <p class="jar-coin-summary" id="jarCoinSummary" aria-live="off"></p>
             </div>
 
             <div class="jar-view" id="jarView" aria-label="今日工资罐">
               <div class="jar-stage" id="jarStage">
                 <img src="assets/generated/salary-jar-empty-ui.png" alt="透明工资罐" class="jar-layer jar-empty">
-                <div class="jar-fill" id="jarFill"><img src="assets/generated/salary-coins-fill.png" alt="" class="coin-pile-layer"></div>
+                <div class="jar-fill" id="jarFill" aria-hidden="true"></div>
                 <div class="coin-stream" id="coinStream" aria-hidden="true"></div>
                 <div class="jar-halo" aria-hidden="true"></div>
               </div>
-              <div class="jar-scale"><span>100%</span><i></i><b id="jarPct">0%</b><i></i><span>0%</span></div>
             </div>
 
             <div class="bar-view" id="barView" hidden>
@@ -126,6 +131,10 @@
             <div><span class="kicker">自动射击 · 小队突围 · 尸潮</span><h2>摸鱼防线</h2><p>带领蓝军穿越数字门，守住下班的路。</p><button class="primary-compact" id="openDefense">进入防线</button></div>
             <img src="game/defense-assets/soldier-clean.png" alt="摸鱼防线蓝军士兵">
           </article>
+          <article class="surface game-card">
+            <div><span class="kicker">3D 探索 · 港区行动</span><h2>几猫 3A 大作</h2><p>一次解锁，随时进入港区行动。</p><button class="primary-compact" id="openJimao">解锁 · 100 摸鱼币</button></div>
+            <div class="jimao-card-mark" aria-hidden="true"><i class="ph ph-crosshair"></i></div>
+          </article>
           <article class="surface stats-card"><span><b id="muyuGames">0</b>累计局数</span><span><b id="muyuBest">0</b>最高功德</span><span><b id="muyuCombo">0</b>最高连击</span></article>
         </section>
         <section class="house-pane" id="house-shop">
@@ -134,7 +143,11 @@
             <article class="shop-item" data-item="theme-office-night"><div class="shop-preview night" aria-label="办公室夜班主题预览"></div><h3>办公室夜班</h3><p>精致深色主题</p><button class="shop-action"><span class="fish-coin">◎</span>500</button></article>
             <article class="shop-item" data-item="theme-simple"><div class="shop-preview"><img src="assets/skins/simple/batch-a-character/capybara_master.png" alt="质朴皮肤"></div><h3>质朴</h3><p>上一套扁平素材体系</p><button class="shop-action"><span class="fish-coin">◎</span>300</button></article>
             <article class="shop-item" data-item="floating-pixel"><div class="shop-preview pixel" aria-label="像素悬浮窗预览"></div><h3>像素悬浮窗</h3><p>悬浮窗皮肤</p><button class="shop-action"><span class="fish-coin">◎</span>400</button></article>
-            <article class="shop-item" data-item="capybara-pajamas"><div class="shop-preview"><img src="assets/v1a/character/capybara_pajamas.png" alt="睡衣卡皮巴拉"></div><h3>睡衣卡皮巴拉</h3><p>精致角色装扮</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
+            <article class="shop-item" data-item="capybara-pajamas"><div class="shop-preview"><img src="assets/v1a/character/capybara_pajamas_clean.png" alt="睡衣卡皮巴拉"></div><h3>睡衣卡皮巴拉</h3><p>精致角色装扮</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
+            <article class="shop-item" data-item="defense-soldier"><div class="shop-preview"><img src="game/defense-assets/soldier-clean.png" alt="蓝军小队长"></div><h3>蓝军小队长</h3><p>防线系列 · 看板伙伴</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
+            <article class="shop-item" data-item="defense-zombie"><div class="shop-preview"><img src="game/defense-assets/zombie-clean.png" alt="呆萌小僵尸"></div><h3>呆萌小僵尸</h3><p>防线系列 · 看板伙伴</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
+            <article class="shop-item" data-item="defense-runner"><div class="shop-preview"><img src="game/defense-assets/enemy-runner.png" alt="疾跑小僵尸"></div><h3>疾跑小僵尸</h3><p>防线系列 · 看板伙伴</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
+            <article class="shop-item" data-item="defense-boss"><div class="shop-preview"><img src="game/defense-assets/boss-1.png" alt="巨力首领"></div><h3>巨力首领</h3><p>防线系列 · 看板伙伴</p><button class="shop-action"><span class="fish-coin">◎</span>200</button></article>
           </div>
         </section>
         <section class="house-pane" id="house-collection">
@@ -175,6 +188,13 @@
             <div class="item-config"><input id="mealName" aria-label="物品名称"><input id="mealPrice" type="number" min="1" aria-label="物品单价"><span>元</span></div>
             <div class="item-config"><input id="movieName" aria-label="物品名称"><input id="moviePrice" type="number" min="1" aria-label="物品单价"><span>元</span></div>
           </article>
+          <article class="surface form-surface">
+            <div class="section-head"><h2>工资罐面额</h2><i class="ph ph-coins"></i></div>
+            <p class="migration-note">金额由大到小拆成不同的钱币，达到更大面额时自动合并。未达到最小面额的金额仍计入工资。</p>
+            <div class="two-fields"><label>1 枚金币（元）<input id="jarGold" type="number" min="0.01" max="1000000" step="0.01" required></label><label>1 枚银币（元）<input id="jarSilver" type="number" min="0.01" max="1000000" step="0.01" required></label></div>
+            <div class="two-fields"><label>1 枚金豆（元）<input id="jarGoldBean" type="number" min="0.01" max="1000000" step="0.01" required></label><label>1 枚银豆（元）<input id="jarSilverBean" type="number" min="0.01" max="1000000" step="0.01" required></label></div>
+            <p class="migration-note" id="jarConfigError" role="alert" hidden>请填写由大到小、不重复的正数面额，最多保留两位小数。</p>
+          </article>
           <article class="surface form-surface skin-surface">
             <div class="section-head"><div><h2>界面皮肤</h2><span class="skin-progress" id="skinProgress">再摸鱼 10 次解锁新皮肤</span></div><i class="ph ph-palette"></i></div>
             <div class="skin-options" id="skinOptions">
@@ -183,12 +203,12 @@
             </div>
           </article>
           <article class="surface form-surface">
-            <div class="section-head"><div><h2>本地数据</h2><span class="skin-progress">V2 原子钱包与库存</span></div><i class="ph ph-database"></i></div>
-            <p class="migration-note">旧版 config.json 会在首次启动时迁移到 app-state.json；真实工资与摸鱼币保持为两个独立数据域。</p>
+            <div class="section-head"><div><h2>本地数据</h2><span class="skin-progress">保存在这台设备上</span></div><i class="ph ph-database"></i></div>
+            <p class="migration-note">工资记录、摸鱼币和收藏保存在这台设备上；摸鱼币不会影响真实工资。</p>
             <button class="secondary-cta" type="button" id="openOrbit">星轨弹射彩蛋</button>
           </article>
           <button class="primary-cta" type="submit"><i class="ph ph-floppy-disk"></i>保存设置</button>
-          <button class="text-danger" type="button" id="quit"><i class="ph ph-sign-out"></i>退出登录</button>
+          <button class="text-danger" type="button" id="quit"><i class="ph ph-sign-out"></i>退出应用</button>
         </form>
       </section>
     </main>
@@ -219,7 +239,7 @@
       <button class="modal-close" id="purchaseClose" aria-label="关闭"><i class="ph ph-x"></i></button>
       <span class="purchase-check"><i class="ph ph-check"></i></span>
       <h2 id="purchaseTitle">购买成功</h2><p>已加入收藏并完成装备</p>
-      <img id="purchaseImage" src="assets/v1a/character/capybara_pajamas.png" alt="">
+      <img id="purchaseImage" src="assets/v1a/character/capybara_pajamas_clean.png" alt="">
       <strong id="purchaseName">睡衣卡皮巴拉</strong>
       <div class="purchase-cost"><span>本次消费</span><b><span class="fish-coin">◎</span><i id="purchasePrice">200</i></b></div>
       <button class="primary-cta" id="purchaseDone">返回摸鱼屋</button>
@@ -228,6 +248,7 @@
   </div>
 
   <script src="engine.js?v=1.1.0"></script>
+  <script src="jar-coins.js"></script>
   <script src="main-render.js?v=1.1.0"></script>
 </body>
 </html>

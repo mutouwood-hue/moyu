@@ -5,6 +5,7 @@ const fs = require('fs');
 const ENGINE = require('./engine.js');
 if (!app.requestSingleInstanceLock()) app.exit(0);
 const STORE = require('./state-store.js');
+const JAR_COINS = require('./jar-coins.js');
 
 const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
 const STATE_PATH = path.join(app.getPath('userData'), 'app-state.json');
@@ -14,6 +15,7 @@ let floatWin = null;
 let gameWin = null;
 let muyuWin = null;
 let defenseWin = null;
+let jimaoWin = null;
 let defenseHiddenByBoss = false;
 let lastDefenseBossToggle = 0;
 const DEFENSE_PATH = path.join(app.getPath('userData'), 'moyu-defense.json');
@@ -24,9 +26,7 @@ let lastMuyuWalletPayload = '';
 
 
 function readConfig() {
-  let saved = {};
-  try { saved = JSON.parse(fs.readFileSync(STATE_PATH, 'utf8')); }
-  catch (_) { try { saved = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); } catch (_) {} }
+  const saved = STORE.readSavedState(fs, STATE_PATH, CONFIG_PATH);
   const merged = STORE.migrateState(saved, Object.assign({}, ENGINE.DEFAULTS, {
     dailyStats: {}, history: [], firedMilestones: [], settlementSeenDate: ''
   }));
@@ -38,18 +38,12 @@ function readConfig() {
   return merged;
 }
 
-let config = readConfig();
-
-function dateKey(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
+let config;
+let startupDataError = null;
+try { config = readConfig(); } catch (error) { startupDataError = error; }
 
 function activeWorkDate(now) {
-  const d = new Date(now || Date.now());
-  const start = ENGINE.parseTime(config.shiftStart);
-  const end = ENGINE.parseTime(config.shiftEnd);
-  if (end < start && ENGINE.nowSec(d) <= end) d.setDate(d.getDate() - 1);
-  return dateKey(d);
+  return ENGINE.workDateKey(config, new Date(now ?? Date.now()));
 }
 
 function ensureDaily(now) {
@@ -151,6 +145,7 @@ function createMain() {
   const isMac = process.platform === 'darwin';
   mainWin = new BrowserWindow({
     width: 642, height: 940, minWidth: 520, minHeight: 720,
+    frame: false,
     backgroundColor: '#F3F7FA',
     icon: path.join(__dirname, 'assets', isMac ? 'app-icon.png' : 'wnf-icon.ico'),
     title: '挣点窝囊费',
@@ -204,6 +199,23 @@ function createGame() {
   gameWin.on('closed', () => { gameWin = null; });
 }
 
+// The supplied standalone prototype runs with its own storage and no Node/IPC privileges.
+function createJimaoGame() {
+  if (jimaoWin && !jimaoWin.isDestroyed()) { jimaoWin.show(); jimaoWin.focus(); return; }
+  jimaoWin = new BrowserWindow({
+    width: 1120, height: 800, minWidth: 720, minHeight: 540,
+    backgroundColor: '#0b0d0f', title: '几猫 3A 大作 · 摸鱼乐园',
+    icon: path.join(__dirname, 'assets', process.platform === 'darwin' ? 'app-icon.png' : 'wnf-icon.ico'),
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, partition: 'persist:moyu-jimao' }
+  });
+  const win = jimaoWin;
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.session.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*'] }, (_details, callback) => callback({ cancel: true }));
+  win.webContents.on('will-navigate', event => event.preventDefault());
+  win.loadFile(path.join('game', 'jimao.html'));
+  win.on('closed', () => { if (jimaoWin === win) jimaoWin = null; });
+}
+
 function createMuyuGame() {
   if (muyuWin && !muyuWin.isDestroyed()) {
     muyuWin.show();
@@ -254,6 +266,11 @@ function createDefenseGame() {
 }
 
 app.whenReady().then(() => {
+  if (startupDataError) {
+    dialog.showErrorBox('本地数据读取失败', startupDataError.message + '\n\n原文件未被修改。请检查文件权限或从备份恢复后重新打开。');
+    app.quit();
+    return;
+  }
   Menu.setApplicationMenu(null);
   ensureDaily(Date.now());
   updateHistory(Date.now());
@@ -261,9 +278,16 @@ app.whenReady().then(() => {
   setInterval(salaryTick, 1000);
 
   ipcMain.on('get-config', event => event.reply('config', publicConfig()));
+  ipcMain.on('main-window-action', (event, action) => {
+    if (!mainWin || mainWin.isDestroyed() || event.sender !== mainWin.webContents) return;
+    if (action === 'minimize') mainWin.minimize();
+    else if (action === 'maximize') { if (mainWin.isMaximized()) mainWin.unmaximize(); else mainWin.maximize(); }
+    else if (action === 'close') mainWin.close();
+  });
   ipcMain.on('set-config', (_event, next) => {
-    const allowed = ['viewMode','monthly','system','shiftStart','shiftEnd','animations','reduceMotion','sound','autoSettlement','freeDays','payDays','itemName','itemPrice','mealName','mealPrice','movieName','moviePrice','skin'];
+    const allowed = ['viewMode','monthly','system','shiftStart','shiftEnd','animations','reduceMotion','sound','autoSettlement','freeDays','payDays','itemName','itemPrice','mealName','mealPrice','movieName','moviePrice','skin', ...JAR_COINS.keys];
     const incoming = Object.fromEntries(Object.entries(next || {}).filter(([key]) => allowed.includes(key)));
+    if (!JAR_COINS.denominations(Object.assign({}, config, incoming))) JAR_COINS.keys.forEach(key => delete incoming[key]);
     if (incoming.skin && !(config.unlockedSkins || []).includes(incoming.skin)) delete incoming.skin;
     config = Object.assign({}, config, incoming);
     ensureDaily(Date.now()); updateHistory(Date.now()); saveConfig(); broadcast();
@@ -308,6 +332,17 @@ app.whenReady().then(() => {
     if (result.ok && result.code !== 'DUPLICATE') { if(!saveConfig(result.state)) return {ok:false,code:'SAVE_FAILED'}; config=result.state; broadcast(); }
     return {ok:result.ok,code:result.code,fishCoins:config.fishCoins,progress:config.defenseProgress,active:config.defenseActiveRun||null};
   });
+  ipcMain.handle('defense-upgrade', async (event, request) => {
+    if (!isDefense(event)) return {ok:false,code:'INVALID'};
+    const core = await import('./game/defense-core.js');
+    if (!isDefense(event)) return {ok:false,code:'INVALID'};
+    const result = STORE.buyDefenseUpgrade(config, request, core, Date.now());
+    if (result.ok && result.code !== 'DUPLICATE') {
+      if (!saveConfig(result.state)) return {ok:false,code:'SAVE_FAILED'};
+      config=result.state; broadcast();
+    }
+    return {ok:result.ok,code:result.code,progress:config.defenseProgress,fishCoins:config.fishCoins};
+  });
   ipcMain.handle('defense-resume', (event, request) => {
     if (!isDefense(event) || !request || typeof request.id !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(request.id)) return {ok:false,code:'INVALID'};
     const checkpoint=config.defenseProgress && config.defenseProgress.endless;
@@ -319,19 +354,29 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('defense-finish', (event, request) => {
     if (!isDefense(event) || !request || typeof request.id !== 'string' || !request.progress || typeof request.progress !== 'object') return {ok:false,code:'INVALID'};
-    const result=STORE.finishDefense(config,request.id,request.progress);
-    if(result.ok && result.code!=='DUPLICATE'){if(!saveConfig(result.state))return {ok:false,code:'SAVE_FAILED'};config=result.state;}
-    return {ok:result.ok,code:result.code,progress:config.defenseProgress,fishCoins:config.fishCoins};
+    const result=STORE.finishDefense(config,request.id,request.progress,request.outcome,Date.now());
+    if(result.ok && result.code!=='DUPLICATE'){if(!saveConfig(result.state))return {ok:false,code:'SAVE_FAILED'};config=result.state;broadcast();}
+    return {ok:result.ok,code:result.code,progress:config.defenseProgress,fishCoins:config.fishCoins,reward:result.reward||0};
+  });
+  ipcMain.handle('open-jimao', event => {
+    if (!mainWin || event.sender !== mainWin.webContents) return {ok:false,code:'INVALID'};
+    const result = STORE.unlockJimao(config, Date.now());
+    if (!result.ok) return {ok:false,code:result.code};
+    if (result.code === 'UNLOCKED') {
+      if (!saveConfig(result.state)) return {ok:false,code:'SAVE_FAILED'};
+      config = result.state; broadcast();
+    }
+    createJimaoGame(); return {ok:true,code:result.code,fishCoins:config.fishCoins};
   });
   ipcMain.on('open-muyu', () => createMuyuGame());
   ipcMain.on('open-orbit', () => createGame());
-  ipcMain.on('muyu-finish', (event, result) => {
-    const awarded = STORE.awardMuyu(config, result, Date.now());
+  ipcMain.handle('muyu-finish', (event, request) => {
+    if (!muyuWin || muyuWin.isDestroyed() || event.sender !== muyuWin.webContents || !request || typeof request !== 'object') return { ok:false, code:'INVALID' };
+    const awarded = STORE.settleMuyu(config, request.result, request.id, Date.now(), saveConfig);
+    if (!awarded.ok) return { ok:false, code:awarded.code };
     config = awarded.state;
-    updateHistory(Date.now());
-    saveConfig();
-    broadcast();
-    event.reply('muyu-result', { reward: awarded.reward, fishCoins: config.fishCoins });
+    if (awarded.code !== 'DUPLICATE') broadcast();
+    return { ok:true, reward:awarded.reward, fishCoins:config.fishCoins };
   });
   ipcMain.handle('purchase-item', (_event, itemId) => {
     const result = STORE.transactPurchase(config, itemId, Date.now());

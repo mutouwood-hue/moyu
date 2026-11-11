@@ -46,3 +46,17 @@ test('摸鱼称号边界保持原计算口径', () => {
   assert.equal(ENGINE.slackTier(0.01), '摸鱼萌新');
   assert.equal(ENGINE.slackTier(0.2), '摸鱼大王');
 });
+
+test('跨夜班次结束后保留满额，直到下一班开始并统一工作日期', () => {
+  const cfg = { ...ENGINE.DEFAULTS, shiftStart: '22:00', shiftEnd: '06:00' };
+  const previous = '2026-08-11';
+  for (const time of [at(6), at(6, 1), at(12), at(21, 59)]) {
+    assert.equal(ENGINE.timeProgress(cfg, time), 1);
+    assert.ok(Math.abs(ENGINE.earnedToday(cfg, time) - ENGINE.dailySalary(cfg)) < 1e-8);
+    assert.equal(ENGINE.workDateKey(cfg, time), previous);
+  }
+  assert.equal(ENGINE.overtimeSeconds(cfg, at(6, 1)), 60);
+  assert.equal(ENGINE.timeProgress(cfg, at(22)), 0);
+  assert.equal(ENGINE.workDateKey(cfg, at(22)), '2026-08-12');
+  assert.equal(ENGINE.workDateKey(ENGINE.DEFAULTS, at(2)), '2026-08-12');
+});

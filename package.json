@@ -1,11 +1,11 @@
 {
   "name": "wanongfei-pc",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "挣点窝囊费 · Win/macOS 工资罐与摸鱼统计悬浮工具",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "check": "node --check main.js && node --check state-store.js && node --check engine.js && node --check main-render.js && node --check float-render.js && node --check game/muyu.js && node --check game/defense-core.js && node --check game/defense.js",
+    "check": "node --check main.js && node --check state-store.js && node --check engine.js && node --check jar-coins.js && node --check main-render.js && node --check float-render.js && node --check game/muyu.js && node --check game/defense-core.js && node --check game/defense.js",
     "test": "node --test",
     "dist": "npm run dist:win && npm run dist:mac",
     "dist:win": "node scripts/build-windows.cjs",
@@ -30,6 +30,7 @@
       "main.js",
       "state-store.js",
       "engine.js",
+      "jar-coins.js",
       "float-render.js",
       "styles.css",
       "v1a.css",
@@ -65,5 +66,8 @@
       "installerIcon": "assets/wnf-icon.ico",
       "uninstallerIcon": "assets/wnf-icon.ico"
     }
+  },
+  "dependencies": {
+    "matter-js": "^0.20.0"
   }
 }

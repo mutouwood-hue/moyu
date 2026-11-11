@@ -2,7 +2,7 @@
   'use strict';
   var ipc=require('electron').ipcRenderer;
   var $=function(id){return document.getElementById(id)};
-  var running=false,score=0,combo=0,bestCombo=0,critical=0,hits=0,left=30,timer=null,kind='normal',lockedResult=false;
+  var running=false,score=0,combo=0,bestCombo=0,critical=0,hits=0,left=30,timer=null,kind='normal',pendingResult=null,saving=false;
   var base='../assets/v1a/muyu/';
   var kinds={
     normal:{label:'普通木鱼',points:1,alt:'普通木鱼'},
@@ -22,11 +22,18 @@
     setTimeout(function(){$('muyu').src=base+'muyu_'+kind+'_rebound.png';$('muyuButton').classList.remove('strike')},85);
     setTimeout(chooseKind,170);render();
   }
-  function finish(){if(!running)return;running=false;clearInterval(timer);$('muyuButton').disabled=true;$('start').hidden=true;$('hint').hidden=true;$('resultScore').textContent=score;$('resultCombo').textContent=bestCombo;$('resultCritical').textContent=critical;$('reward').textContent='结算中';$('result').hidden=false;lockedResult=true;ipc.send('muyu-finish',{score:score,combo:bestCombo,critical:critical,hits:hits})}
-  function start(){clearInterval(timer);running=true;lockedResult=false;score=0;combo=0;bestCombo=0;critical=0;hits=0;left=30;$('result').hidden=true;$('start').hidden=true;$('hint').hidden=false;$('muyuButton').disabled=false;setKind('normal');render();timer=setInterval(function(){left-=1;render();if(left<=0)finish()},1000)}
-  $('muyuButton').onclick=hit;$('start').onclick=start;$('again').onclick=start;
+  async function saveResult(){
+    if(!pendingResult||saving)return;
+    saving=true;$('retrySave').disabled=true;$('saveError').hidden=true;$('reward').textContent='结算中';
+    var data;try{data=await ipc.invoke('muyu-finish',pendingResult)}catch(_){data={ok:false}}
+    saving=false;
+    if(!data||!data.ok){$('reward').textContent='--';$('saveError').hidden=false;$('retrySave').hidden=false;$('retrySave').disabled=false;return}
+    $('reward').textContent=data.reward;$('wallet').textContent=data.fishCoins;$('retrySave').hidden=true;$('again').disabled=false;pendingResult=null;
+  }
+  function finish(){if(!running)return;running=false;clearInterval(timer);$('muyuButton').disabled=true;$('start').hidden=true;$('hint').hidden=true;$('resultScore').textContent=score;$('resultCombo').textContent=bestCombo;$('resultCritical').textContent=critical;$('result').hidden=false;$('again').disabled=true;pendingResult={id:require('crypto').randomUUID(),result:{score:score,combo:bestCombo,critical:critical,hits:hits}};saveResult()}
+  function start(){if(saving||pendingResult)return;clearInterval(timer);running=true;score=0;combo=0;bestCombo=0;critical=0;hits=0;left=30;$('result').hidden=true;$('saveError').hidden=true;$('retrySave').hidden=true;$('start').hidden=true;$('hint').hidden=false;$('muyuButton').disabled=false;setKind('normal');render();timer=setInterval(function(){left-=1;render();if(left<=0)finish()},1000)}
+  $('muyuButton').onclick=hit;$('start').onclick=start;$('again').onclick=start;$('retrySave').onclick=saveResult;
   ipc.on('muyu-wallet',function(_e,data){$('wallet').textContent=Number(data&&data.fishCoins)||0;base=data&&data.assetStyle==='simple'?'../assets/skins/simple/batch-b-muyu/':'../assets/v1a/muyu/';setKind(kind)});
-  ipc.on('muyu-result',function(_e,data){if(!lockedResult)return;$('reward').textContent=data.reward;$('wallet').textContent=data.fishCoins});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')window.close();if((e.key===' '||e.key==='Enter')&&running){e.preventDefault();hit()}});
   render();
 })();

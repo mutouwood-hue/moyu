@@ -2,11 +2,32 @@
 
 const DATA_VERSION = 2;
 
+// Only an absent file is a fresh install. A damaged or unreadable file must never
+// silently become defaults, which would overwrite the user's wallet and history.
+function readSavedState(fs, statePath, legacyPath) {
+  for (const filePath of [statePath, legacyPath]) {
+    let text;
+    try { text = fs.readFileSync(filePath, 'utf8'); }
+    catch (error) { if (error.code === 'ENOENT') continue; throw new Error('无法读取本地数据：' + filePath, { cause: error }); }
+    let value;
+    try { value = JSON.parse(text); }
+    catch (error) { throw new Error('本地数据文件损坏：' + filePath, { cause: error }); }
+    if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('本地数据格式不正确：' + filePath);
+    return value;
+  }
+  return {};
+}
+
+
 const SHOP_ITEMS = Object.freeze({
   'theme-office-night': { id: 'theme-office-night', type: 'theme', name: '办公室夜班', price: 500 },
   'theme-simple': { id: 'theme-simple', type: 'theme', name: '质朴', price: 300 },
   'floating-pixel': { id: 'floating-pixel', type: 'floating', name: '像素悬浮窗', price: 400 },
-  'capybara-pajamas': { id: 'capybara-pajamas', type: 'capybara', name: '睡衣卡皮巴拉', price: 200 }
+  'capybara-pajamas': { id: 'capybara-pajamas', type: 'capybara', name: '睡衣卡皮巴拉', price: 200 },
+  'defense-soldier': { id: 'defense-soldier', type: 'capybara', name: '蓝军小队长', price: 200 },
+  'defense-zombie': { id: 'defense-zombie', type: 'capybara', name: '呆萌小僵尸', price: 200 },
+  'defense-runner': { id: 'defense-runner', type: 'capybara', name: '疾跑小僵尸', price: 200 },
+  'defense-boss': { id: 'defense-boss', type: 'capybara', name: '巨力首领', price: 200 }
 });
 
 function uniqueStrings(value, fallback) {
@@ -56,6 +77,18 @@ function transactPurchase(current, itemId, now) {
   return { ok: true, code: 'PURCHASED', item, state };
 }
 
+// Purchased once and persisted separately from cosmetic equipment.
+function unlockJimao(current, now) {
+  if ((current.unlockedGames || []).includes('jimao')) return { ok:true, code:'OWNED', state:current };
+  if ((Number(current.fishCoins) || 0) < 100) return { ok:false, code:'INSUFFICIENT', state:current };
+  const state = migrateState(JSON.parse(JSON.stringify(current)), {});
+  state.fishCoins -= 100; state.totalFishCoinsSpent += 100;
+  state.unlockedGames = [...new Set([...(Array.isArray(state.unlockedGames) ? state.unlockedGames : []), 'jimao'])];
+  state.fishCoinTransactions.push({ id:'jimao-unlock', type:'spend', amount:-100, game:'jimao', at:now || Date.now() });
+  state.fishCoinTransactions = state.fishCoinTransactions.slice(-200);
+  return { ok:true, code:'UNLOCKED', state };
+}
+
 function equipItem(current, itemId) {
   const defaults = {
     'theme-classic': { id: 'theme-classic', type: 'theme', name: '默认主题' },
@@ -86,6 +119,19 @@ function awardMuyu(current, result, now) {
   return { reward, state };
 }
 
+// A retry carries the same run ID; recording it with the award makes an
+// acknowledged or retried settlement safe from double-crediting.
+function settleMuyu(current, result, id, now, persist) {
+  if (typeof id !== 'string' || !/^[a-zA-Z0-9-]{16,80}$/.test(id)) return { ok: false, code: 'INVALID', state: current };
+  const completed = Array.isArray(current.muyuSettlements) ? current.muyuSettlements : [];
+  const existing = completed.find(item => item.id === id);
+  if (existing) return { ok: true, code: 'DUPLICATE', reward: existing.reward, state: current };
+  const awarded = awardMuyu(current, result, now);
+  awarded.state.muyuSettlements = completed.concat({ id, reward: awarded.reward }).slice(-200);
+  if (!persist(awarded.state)) return { ok: false, code: 'SAVE_FAILED', state: current };
+  return { ok: true, code: 'OK', reward: awarded.reward, state: awarded.state };
+}
+
 // Wallet and defense progression are committed together by the host's atomic save.
 const DEFENSE_EXCHANGE_RATE = 100;
 function defenseTransaction(current, action, requestId, now, launch) {
@@ -108,14 +154,58 @@ function defenseTransaction(current, action, requestId, now, launch) {
   return { ok: true, code: 'OK', state };
 }
 
-function finishDefense(current, requestId, progress) {
-  if (typeof requestId !== 'string' || !progress || typeof progress !== 'object') return {ok:false,code:'INVALID',state:current};
-  const done=Array.isArray(current.defenseCompleted)?current.defenseCompleted:[];
-  if(done.includes(requestId)) return {ok:true,code:'DUPLICATE',state:current};
-  if(!current.defenseActiveRun || current.defenseActiveRun.id!==requestId) return {ok:false,code:'INVALID',state:current};
-  try {if(JSON.stringify(progress).length>1000000) return {ok:false,code:'INVALID',state:current};}catch(_){return {ok:false,code:'INVALID',state:current};}
-  const state=Object.assign({},current,{defenseProgress:progress,defenseActiveRun:null,defenseCompleted:done.concat(requestId).slice(-200)});
-  return {ok:true,code:'OK',state};
+// Direct purchase shares the same 1:100 rate; unspent conversion is retained.
+function buyDefenseUpgrade(current, request, core, now) {
+  if (!request || !/^[a-zA-Z0-9-]{16,80}$/.test(request.id || '') || !['tech','refinement'].includes(request.kind) || typeof request.item !== 'string') return {ok:false,code:'INVALID',state:current};
+  const actions = Array.isArray(current.defenseActions) ? current.defenseActions : [];
+  const prior = actions.find(a => a.id === request.id);
+  if (prior) return {ok:prior.action === 'upgrade' && prior.kind === request.kind && prior.item === request.item,code:'DUPLICATE',state:current};
+  const progress = core.normalizeProgress(current.defenseProgress);
+  let level, cost;
+  if (request.kind === 'tech' && core.TECH[request.item]) {
+    const tech = core.TECH[request.item]; level = progress.tech[request.item];
+    if (level >= tech.max) return {ok:false,code:'MAX',state:current};
+    cost = core.upgradeCost(tech.base,level);
+  } else if (request.kind === 'refinement' && progress.collected.includes(request.item)) {
+    level = progress.refinement[request.item] || 0;
+    if (level >= 5) return {ok:false,code:'MAX',state:current};
+    cost = core.upgradeCost(65,level);
+  } else return {ok:false,code:'LOCKED',state:current};
+  if (request.expectedLevel !== level) return {ok:false,code:'STALE',state:current};
+  const fish = Math.ceil(Math.max(0,cost-progress.supply)/DEFENSE_EXCHANGE_RATE);
+  if (!Number.isSafeInteger(progress.supply) || progress.supply > Number.MAX_SAFE_INTEGER-fish*DEFENSE_EXCHANGE_RATE) return {ok:false,code:'INVALID',state:current};
+  if ((Number(current.fishCoins)||0) < fish) return {ok:false,code:'INSUFFICIENT',state:current};
+  progress.supply += fish*DEFENSE_EXCHANGE_RATE;
+  const upgrade = core.buyUpgrade(progress,request.kind,request.item);
+  if (!upgrade.ok) return {ok:false,code:'INVALID',state:current};
+  const state = migrateState(JSON.parse(JSON.stringify(current)),{});
+  state.fishCoins -= fish; state.totalFishCoinsSpent += fish;
+  state.defenseProgress = upgrade.progress;
+  state.defenseActions = actions.concat({id:request.id,action:'upgrade',kind:request.kind,item:request.item,at:now||Date.now()}).slice(-200);
+  if(fish) state.fishCoinTransactions.push({id:'defense-'+request.id,type:'spend',amount:-fish,game:'defense',purpose:'upgrade',at:now||Date.now()});
+  state.fishCoinTransactions = state.fishCoinTransactions.slice(-200);
+  return {ok:true,code:'OK',state,fish,cost};
 }
 
-module.exports = { DATA_VERSION, SHOP_ITEMS, migrateState, transactPurchase, equipItem, awardMuyu, DEFENSE_EXCHANGE_RATE, defenseTransaction, finishDefense };
+function finishDefense(current, requestId, progress, outcome, now) {
+  if (typeof requestId !== 'string' || !progress || typeof progress !== 'object') return {ok:false,code:'INVALID',state:current};
+  const done=Array.isArray(current.defenseCompleted)?current.defenseCompleted:[];
+  if(done.includes(requestId)) return {ok:true,code:'DUPLICATE',state:current,reward:(current.defenseRewardReceipts||[]).find(r=>r.id===requestId)?.reward || 0};
+  if(!current.defenseActiveRun || current.defenseActiveRun.id!==requestId) return {ok:false,code:'INVALID',state:current};
+  try {if(JSON.stringify(progress).length>1000000) return {ok:false,code:'INVALID',state:current};}catch(_){return {ok:false,code:'INVALID',state:current};}
+  let reward=0;
+  if (outcome && typeof outcome === 'object') {
+    const seconds = Number(outcome.activeSeconds);
+    if (!Number.isFinite(seconds) || seconds < 0 || seconds > 86400 || !['won','failed','cashout'].includes(outcome.status)) return {ok:false,code:'INVALID',state:current};
+    const active = current.defenseActiveRun;
+    if (active.endless) { if (outcome.status === 'won') return {ok:false,code:'INVALID',state:current}; reward=Math.floor(Math.min(seconds,3600)/10); }
+    else { if (outcome.status === 'cashout') return {ok:false,code:'INVALID',state:current}; reward=seconds>=10 ? (outcome.status==='won'?12:6) : 0; }
+  }
+  const state=Object.assign({},current,{defenseProgress:progress,defenseActiveRun:null,defenseCompleted:done.concat(requestId).slice(-200)});
+  if(reward) { state.fishCoins=(Number(current.fishCoins)||0)+reward; state.totalFishCoinsEarned=(Number(current.totalFishCoinsEarned)||0)+reward;
+    state.fishCoinTransactions=(current.fishCoinTransactions||[]).concat({id:'defense-reward-'+requestId,type:'earn',amount:reward,game:'defense',at:now||Date.now()}).slice(-200); }
+  state.defenseRewardReceipts=(current.defenseRewardReceipts||[]).concat({id:requestId,reward}).slice(-200);
+  return {ok:true,code:'OK',state,reward};
+}
+
+module.exports = { readSavedState, settleMuyu, DATA_VERSION, SHOP_ITEMS, migrateState, transactPurchase, unlockJimao, equipItem, awardMuyu, DEFENSE_EXCHANGE_RATE, defenseTransaction, buyDefenseUpgrade, finishDefense };

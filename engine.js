@@ -51,6 +51,13 @@
     return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds();
   }
 
+  // 跨夜班次在下一次上班前始终归属于开始当天。
+  function workDateKey(cfg, at) {
+    var d = new Date((at || new Date()).getTime());
+    if (parseTime(cfg.shiftEnd) < parseTime(cfg.shiftStart) && nowSec(d) < parseTime(cfg.shiftStart)) d.setDate(d.getDate() - 1);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
   function payDays(cfg) {
     return cfg.system === 'free' ? (cfg.freeDays || 22) : (cfg.payDays || 21.75);
   }
@@ -75,10 +82,8 @@
     if (e > s) {
       passed = now - s;                       // 当天窗口 [s,e)
     } else {
-      // 跨夜窗口 [s,24) ∪ [0,e)；e..s 之间为非班次时段
-      if (now >= s) passed = now - s;
-      else if (now <= e) passed = (24 * 3600 - s) + now;
-      else passed = -1;                       // 处于非班次时段
+      // 新班次开始前保留上一跨夜班次的完成状态及加班信息。
+      passed = now >= s ? now - s : (24 * 3600 - s) + now;
     }
     if (passed < 0) passed = 0;              // 还没开始 / 非班次
     if (passed > total) passed = total;      // 已下班
@@ -206,6 +211,7 @@
     DEFAULTS: DEFAULTS,
     parseTime: parseTime,
     nowSec: nowSec,
+    workDateKey: workDateKey,
     payDays: payDays,
     shiftSeconds: shiftSeconds,
     shiftHours: shiftHours,

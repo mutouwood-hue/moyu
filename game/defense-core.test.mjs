@@ -79,3 +79,10 @@ test('每个章节 Boss 在道路结束时登场、冻结道路进度并可击�
   assert.equal(b.roadTime,roadTime);assert.equal(b.status,'won');assert.ok(b.events.some(e=>e.type==='won'));
  }
 });
+
+test('无尽检查点保留有效操作时间以便最终结算',async()=>{
+ const {restoreBattle}=await import('./defense-core.js');
+ let b=createBattle({endless:true,wave:5,seed:4});b.fishActiveSeconds=23;b.status='won';let cp=checkpoint(b);
+ assert.equal(cp.battle.fishActiveSeconds,23);
+ assert.equal(restoreBattle(cp.battle).fishActiveSeconds,23);
+});

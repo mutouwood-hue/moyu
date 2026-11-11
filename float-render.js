@@ -4,8 +4,9 @@
   var ipc = null;
   try { ipc = require('electron').ipcRenderer; } catch (_) {}
   var cfg = Object.assign({}, ENGINE.DEFAULTS, { dailyStats: {}, firedMilestones: [] });
-  var hidden = false, first = true, previousEarned = 0, pendingGain = 0;
+  var hidden = false;
   var $ = function (id) { return document.getElementById(id); };
+  var jarPresenter = JAR_COINS.createPresenter($('miniFill'), $('coinStream'), $('miniJar'), 24);
 
   function reducedMotion() { return cfg.reduceMotion === 'on' || (cfg.reduceMotion === 'system' && cfg.systemReduceMotion); }
   function updateMode() {
@@ -19,12 +20,11 @@
     var earned = ENGINE.earnedToday(cfg), progress = ENGINE.timeProgress(cfg), p = Math.max(0, Math.min(1, progress));
     $('ps').textContent = ENGINE.fmt4(ENGINE.perSecond(cfg));
     $('earned').textContent = hidden ? '¥ • • •' : ENGINE.fmt(earned);
-    $('fill').style.width = (p * 100) + '%'; $('pct').textContent = Math.round(progress * 100) + '%'; $('miniFill').style.clipPath = `inset(${(1 - p) * 100}% 0 0)`;
+    $('fill').style.width = (p * 100) + '%'; $('pct').textContent = Math.round(progress * 100) + '%';
+    jarPresenter.update(earned, cfg, !hidden && !document.hidden && cfg.animations !== false && !reducedMotion()); $('miniFill').style.visibility = hidden ? 'hidden' : ''; $('coinStream').style.visibility = hidden ? 'hidden' : '';
     var stats = cfg.dailyStats || {};
     $('slackCopy').textContent = cfg.mode === 'slack' ? '摸鱼 ' + ENGINE.fmt(stats.slackEarned || 0) : '';
     $('statusCopy').textContent = progress >= 1 ? '今日通关 · 双击查看结算' : progress >= .9 ? '胜利就在右下角' : '拖拽移动 · 双击展开看板';
-    if (!first && earned > previousEarned && progress > 0 && progress < 1) pendingGain += earned - previousEarned;
-    previousEarned = earned; first = false;
     document.body.classList.toggle('reduce-motion', reducedMotion() || cfg.animations === false);
     document.body.classList.toggle('skin-orbit', cfg.skin === 'orbit');
     document.body.classList.toggle('theme-office-night', cfg.equipped && cfg.equipped.theme === 'theme-office-night');
@@ -33,11 +33,6 @@
     updateMode();
   }
 
-  function flushCoin() {
-    if (pendingGain <= 0 || document.hidden || cfg.animations === false || reducedMotion()) { pendingGain = 0; return; }
-    pendingGain = 0;
-    var coin = document.createElement('img'); coin.className = 'mini-coin'; coin.src = 'assets/generated/salary-coin.png'; $('coinStream').appendChild(coin); setTimeout(function () { coin.remove(); }, 560);
-  }
   function showToast(text) { $('toast').textContent = text; $('toast').classList.add('show'); clearTimeout($('toast')._t); $('toast')._t = setTimeout(function () { $('toast').classList.remove('show'); }, 3200); }
 
   $('eye').onclick = function () { hidden = !hidden; $('eye').innerHTML = '<i class="ph ph-' + (hidden ? 'eye-slash' : 'eye') + '"></i>'; $('eye').setAttribute('aria-label', hidden ? '显示金额' : '隐藏金额'); render(); };
@@ -49,5 +44,5 @@
     ipc.on('config', function (_event, next) { var oldMode = cfg.mode; cfg = Object.assign({}, ENGINE.DEFAULTS, cfg, next || {}); if (oldMode && oldMode !== cfg.mode) showToast(cfg.mode === 'slack' ? '摸鱼开始：公司今日赞助你休息' : '已切换为' + (cfg.mode === 'work' ? '工作' : '默认') + '模式'); render(); });
     ipc.send('float-ready');
   }
-  render(); setInterval(render, 1000); setInterval(flushCoin, 5000);
+  render(); setInterval(render, 1000);
 })();
