@@ -33,7 +33,7 @@ jobs:
           gh release upload "$env:RELEASE_TAG" 'moyu-v1.2.0-windows-x64-setup.exe' --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
   macos:
-    runs-on: macos-14
+    runs-on: macos-15-intel
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
