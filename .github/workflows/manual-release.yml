@@ -20,7 +20,7 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
-      - run: npm run dist:win -- --config.directories.output=release-ci-win
+      - run: npm run dist:win -- --publish never --config.directories.output=release-ci-win
       - name: Verify and upload Windows installer
         shell: pwsh
         env:
@@ -46,7 +46,7 @@ jobs:
       - name: Build macOS DMG and ZIP
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npm run dist:mac -- --config.directories.output=release-ci-mac
+        run: npm run dist:mac -- --publish never --config.directories.output=release-ci-mac
       - name: Verify and upload macOS packages
         env:
           GH_TOKEN: ${{ github.token }}
